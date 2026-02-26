@@ -38,14 +38,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 async function fetchCases() {
     try {
-        // Obtenemos los datos con control estricto anti-caché
-        const response = await fetch(DB_URL, {
+        // Obtenemos los datos esquivando la caché mediante un parámetro variable (Cache-busting)
+        const timestamp = new Date().getTime();
+        const response = await fetch(`${DB_URL}?t=${timestamp}`, {
             method: 'GET',
-            cache: 'no-store',
-            headers: {
-                'Cache-Control': 'no-cache',
-                'Pragma': 'no-cache'
-            }
+            cache: 'no-store'
         });
 
         if (response.ok) {
