@@ -38,6 +38,7 @@ const modalDemo = document.getElementById('modal-demo');
 const formDemo = document.getElementById('form-demo');
 const btnSaveDemo = document.getElementById('btn-save-demo');
 const demoName = document.getElementById('demo-name');
+const demoPath = document.getElementById('demo-path');
 const demoUrl = document.getElementById('demo-url');
 
 // Función Global de Debug
@@ -171,6 +172,7 @@ btnSaveDemo.addEventListener('click', (e) => {
         const newDemo = {
             id: Date.now().toString(),
             name: demoName.value.trim(),
+            path: demoPath.value.trim(),
             url: demoUrl.value.trim()
         };
 
@@ -206,7 +208,8 @@ function renderLocalDemos() {
                     <h3 class="usecase-title">${demo.name}</h3>
                 </div>
                 <div style="margin-top:15px; display: flex; gap: 10px; align-items: center;">
-                    <a href="${demo.url}" target="_blank" class="btn btn-primary" style="flex-grow: 1; font-size: 0.85rem; text-decoration: none; text-align:center;">🔗 Ver App</a>
+                    <a href="${demo.path}" class="btn btn-primary" style="flex-grow: 1; font-size: 0.85rem; text-decoration: none; text-align:center;" title="Abrir Demo">🔗 Ver App</a>
+                    <a href="${demo.url}" target="_blank" class="btn btn-outline" style="border-color: #64748b; color: #64748b; font-size: 0.85rem; text-decoration: none; text-align:center;" title="Ver en GitHub">GitHub</a>
                     <button class="btn btn-outline" style="border-color: #f59e0b; color: #f59e0b; padding: 10px;" onclick="deleteLocalDemo('${demo.id}', event)" title="Ocultar de mi PC">🗑️</button>
                 </div>
             `;
