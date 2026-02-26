@@ -1,5 +1,5 @@
-// Variables y Base de Datos Global (KVDB gratuito y en la nube)
-const KVDB_URL = 'https://kvdb.io/5BkwvtxLoi1MuKnZ79D27r/prompt_usecases';
+// Variables y Base de Datos Global
+const DB_URL = 'https://api.restful-api.dev/objects/ff8081819c5368bb019c9ac92b2a7852';
 let useCases = [];
 let currentExecutingCase = null;
 
@@ -36,15 +36,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderUseCases();
 });
 
-// Obtener los casos desde la nube
 async function fetchCases() {
     try {
-        const response = await fetch(KVDB_URL);
+        const response = await fetch(DB_URL);
         if (response.ok) {
-            useCases = await response.json();
-            if (!Array.isArray(useCases)) useCases = [];
+            const result = await response.json();
+            if (result && result.data && Array.isArray(result.data.useCases)) {
+                useCases = result.data.useCases;
+            } else {
+                useCases = [];
+            }
         } else {
-            // Si es 404 significa que la key todavía no existe, está bien
             useCases = [];
         }
     } catch (error) {
@@ -57,9 +59,13 @@ async function fetchCases() {
 // Guardar los casos en la Nube
 async function saveCases() {
     try {
-        await fetch(KVDB_URL, {
-            method: 'POST',
-            body: JSON.stringify(useCases)
+        await fetch(DB_URL, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                name: "PromptManagerData",
+                data: { useCases: useCases }
+            })
         });
     } catch (error) {
         showToast("Error al guardar en la nube.");
