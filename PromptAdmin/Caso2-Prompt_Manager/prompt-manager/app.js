@@ -1,5 +1,6 @@
-// Variables Globales
-let useCases = JSON.parse(localStorage.getItem('prompt_usecases')) || [];
+// Variables y Base de Datos Global (KVDB gratuito y en la nube)
+const KVDB_URL = 'https://kvdb.io/5BkwvtxLoi1MuKnZ79D27r/prompt_usecases';
+let useCases = [];
 let currentExecutingCase = null;
 
 // Elementos DOM Principales
@@ -28,14 +29,42 @@ const consoleOutput = document.getElementById('console-output');
 const errorInput = document.getElementById('error-input');
 const errorModel = document.getElementById('error-model');
 
-// Inicialización
-document.addEventListener('DOMContentLoaded', () => {
+// Inicialización: Cargar la base de datos de la nube
+document.addEventListener('DOMContentLoaded', async () => {
+    useCasesGrid.innerHTML = '<div class="empty-state">Conectando con la base de datos global... ⏳</div>';
+    await fetchCases();
     renderUseCases();
 });
 
-// Guardar los casos en LocalStorage
-function saveCases() {
-    localStorage.setItem('prompt_usecases', JSON.stringify(useCases));
+// Obtener los casos desde la nube
+async function fetchCases() {
+    try {
+        const response = await fetch(KVDB_URL);
+        if (response.ok) {
+            useCases = await response.json();
+            if (!Array.isArray(useCases)) useCases = [];
+        } else {
+            // Si es 404 significa que la key todavía no existe, está bien
+            useCases = [];
+        }
+    } catch (error) {
+        console.error("Error al cargar datos:", error);
+        useCases = [];
+        showToast("Error de conexión al cargar el historial global.");
+    }
+}
+
+// Guardar los casos en la Nube
+async function saveCases() {
+    try {
+        await fetch(KVDB_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(useCases)
+        });
+    } catch (error) {
+        showToast("Error al guardar en la nube.");
+    }
 }
 
 // ---- Lógica Crear Caso de Uso ----
@@ -45,7 +74,7 @@ btnCreatePrompt.addEventListener('click', () => {
     openModal('modal-create');
 });
 
-btnSaveUseCase.addEventListener('click', (e) => {
+btnSaveUseCase.addEventListener('click', async (e) => {
     e.preventDefault();
     if (formCreate.checkValidity()) {
         const newCase = {
@@ -54,11 +83,20 @@ btnSaveUseCase.addEventListener('click', (e) => {
             rules: createRules.value.trim(),
             input: createInput.value.trim()
         };
+
+        btnSaveUseCase.disabled = true;
+        btnSaveUseCase.textContent = 'Guardando...';
+
+        // Agregar y sincronizar
         useCases.push(newCase);
-        saveCases();
+        await saveCases();
+
         renderUseCases();
         closeModal('modal-create');
-        showToast('Caso de Uso guardado exitosamente');
+        showToast('Caso de Uso global guardado exitosamente');
+
+        btnSaveUseCase.disabled = false;
+        btnSaveUseCase.textContent = 'Guardar';
     } else {
         formCreate.reportValidity();
     }
@@ -73,27 +111,44 @@ function renderUseCases() {
     if (useCases.length === 0) {
         useCasesGrid.appendChild(emptyState);
         emptyState.style.display = 'block';
+        emptyState.textContent = 'No tienes casos de uso creados todavía. La base global está vacía.';
     } else {
         emptyState.style.display = 'none';
 
-        useCases.forEach((uc) => {
+        // Ordenar casos: del más reciente al más antiguo
+        [...useCases].reverse().forEach((uc) => {
             const card = document.createElement('div');
             card.className = 'usecase-card';
-            card.onclick = () => openExecuteModal(uc.id);
 
             card.innerHTML = `
-                <div>
+                <div onclick="openExecuteModal('${uc.id}')" style="flex-grow: 1; cursor: pointer;">
                     <h3 class="usecase-title">${uc.name}</h3>
                     <p class="usecase-desc">${uc.rules}</p>
                 </div>
-                <div style="margin-top:15px">
-                    <button class="btn btn-outline" style="width:100%; font-size: 0.8rem;">⚙️ Configurar y Ejecutar</button>
+                <div style="margin-top:15px; display: flex; gap: 10px; align-items: center;">
+                    <button class="btn btn-primary" style="flex-grow: 1; font-size: 0.85rem;" onclick="openExecuteModal('${uc.id}')">⚡ Ejecutar</button>
+                    <button class="btn btn-outline" style="border-color: #ef4444; color: #ef4444; padding: 10px;" onclick="deleteUseCase('${uc.id}', event)" title="Eliminar Caso">🗑️</button>
                 </div>
             `;
             useCasesGrid.appendChild(card);
         });
     }
 }
+
+// Acción de eliminar caso
+window.deleteUseCase = async (id, event) => {
+    event.stopPropagation(); // Evita abrir el modal
+    if (confirm('¿Estás seguro/a que deseas ELIMINAR este Caso de Uso global de forma PERMANENTE?')) {
+        const btn = event.currentTarget;
+        btn.textContent = '⏳';
+        btn.disabled = true;
+
+        useCases = useCases.filter(uc => uc.id !== id);
+        await saveCases();
+        renderUseCases();
+        showToast('Caso de Uso eliminado de la base de datos.');
+    }
+};
 
 // ---- Lógica Ejecutar Caso de Uso ----
 
