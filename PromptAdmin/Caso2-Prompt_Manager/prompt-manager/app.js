@@ -1,5 +1,5 @@
 // Variables y Base de Datos Global
-const DB_URL = 'https://api.restful-api.dev/objects/ff8081819c5368bb019c9ac92b2a7852';
+const DB_URL = 'https://jsonblob.com/api/jsonBlob/019c9ae4-f89d-7866-83d5-f724b3abe051';
 let useCases = [];
 let currentExecutingCase = null;
 
@@ -60,8 +60,8 @@ async function fetchCases() {
         if (response.ok) {
             const result = await response.json();
             addLog(`FETCH Exitoso. Respuesta: ${JSON.stringify(result).substring(0, 100)}...`);
-            if (result && result.data && Array.isArray(result.data.useCases)) {
-                useCases = result.data.useCases;
+            if (result && Array.isArray(result.useCases)) {
+                useCases = result.useCases;
             } else {
                 useCases = [];
                 addLog("Aviso: No se encontraron casos válidos en la respuesta.", true);
@@ -84,11 +84,11 @@ async function saveCases() {
         addLog(`Iniciando SAVE/PUT a la DB con ${useCases.length} items...`);
         const response = await fetch(DB_URL, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                name: "PromptManagerData",
-                data: { useCases: useCases }
-            })
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({ useCases: useCases })
         });
 
         if (response.ok) {
