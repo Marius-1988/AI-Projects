@@ -59,7 +59,6 @@ async function saveCases() {
     try {
         await fetch(KVDB_URL, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(useCases)
         });
     } catch (error) {
