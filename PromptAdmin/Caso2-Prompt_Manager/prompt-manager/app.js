@@ -8,6 +8,18 @@ const useCasesGrid = document.getElementById('use-cases-grid');
 const emptyState = document.getElementById('empty-state');
 const btnCreatePrompt = document.getElementById('btn-create-prompt');
 const toast = document.getElementById('toast');
+const debugLogs = document.getElementById('debug-logs');
+
+// Función Global de Debug
+function addLog(message, isError = false) {
+    if (!debugLogs) return;
+    const time = new Date().toLocaleTimeString();
+    const line = document.createElement('div');
+    line.className = `log-entry ${isError ? 'log-error' : 'log-success'}`;
+    line.innerHTML = `<strong>[${time}]</strong> ${message}`;
+    debugLogs.appendChild(line);
+    debugLogs.scrollTop = debugLogs.scrollHeight;
+}
 
 // Modal Crear Contexto
 const modalCreate = document.getElementById('modal-create');
@@ -38,7 +50,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 async function fetchCases() {
     try {
-        // Obtenemos los datos esquivando la caché mediante un parámetro variable (Cache-busting)
+        addLog("Iniciando FETCH a la DB...");
         const timestamp = new Date().getTime();
         const response = await fetch(`${DB_URL}?t=${timestamp}`, {
             method: 'GET',
@@ -47,15 +59,19 @@ async function fetchCases() {
 
         if (response.ok) {
             const result = await response.json();
+            addLog(`FETCH Exitoso. Respuesta: ${JSON.stringify(result).substring(0, 100)}...`);
             if (result && result.data && Array.isArray(result.data.useCases)) {
                 useCases = result.data.useCases;
             } else {
                 useCases = [];
+                addLog("Aviso: No se encontraron casos válidos en la respuesta.", true);
             }
         } else {
+            addLog(`Error en respuesta FETCH: ${response.status} ${response.statusText}`, true);
             useCases = [];
         }
     } catch (error) {
+        addLog(`Excepción Crítica en Fetch: ${error.message}`, true);
         console.error("Error al cargar datos:", error);
         useCases = [];
         showToast("Error de conexión al cargar el historial global.");
@@ -65,7 +81,8 @@ async function fetchCases() {
 // Guardar los casos en la Nube
 async function saveCases() {
     try {
-        await fetch(DB_URL, {
+        addLog(`Iniciando SAVE/PUT a la DB con ${useCases.length} items...`);
+        const response = await fetch(DB_URL, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -73,7 +90,15 @@ async function saveCases() {
                 data: { useCases: useCases }
             })
         });
+
+        if (response.ok) {
+            addLog(`GUARDADO Exitoso (200 OK).`);
+        } else {
+            const text = await response.text();
+            addLog(`Error en servidor al Guardar: Status ${response.status}. Mensaje: ${text}`, true);
+        }
     } catch (error) {
+        addLog(`Excepción Crítica en Save: ${error.message}`, true);
         showToast("Error al guardar en la nube.");
     }
 }

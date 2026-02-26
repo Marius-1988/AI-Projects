@@ -121,6 +121,16 @@
     <!-- Notificación emergente -->
     <div id="toast" class="toast hidden"></div>
 
+    <!-- Panel de Debugging -->
+    <div id="debug-panel" class="debug-panel">
+        <div class="debug-header">
+            <h4>🐛 Consola de Debug en Vivo</h4>
+            <button class="btn-close"
+                onclick="document.getElementById('debug-panel').classList.toggle('minimized')">_</button>
+        </div>
+        <div id="debug-logs" class="debug-logs"></div>
+    </div>
+
     <script src="app.js"></script>
 </body>
 

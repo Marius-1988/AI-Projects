@@ -376,6 +376,74 @@ h4 {
     transition: opacity 0.3s;
 }
 
+/* Panel de Debug */
+.debug-panel {
+    position: fixed;
+    bottom: 0;
+    left: 20px;
+    width: 350px;
+    background-color: #1e293b;
+    color: #33ff33;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.8rem;
+    border-top-left-radius: var(--radius);
+    border-top-right-radius: var(--radius);
+    box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.3);
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    max-height: 300px;
+    transition: transform 0.3s;
+}
+
+.debug-panel.minimized {
+    transform: translateY(calc(100% - 40px));
+}
+
+.debug-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 15px;
+    background-color: #0f172a;
+    border-top-left-radius: var(--radius);
+    border-top-right-radius: var(--radius);
+    cursor: pointer;
+}
+
+.debug-header h4 {
+    color: #e2e8f0;
+    margin: 0;
+    font-size: 0.9rem;
+}
+
+.debug-header .btn-close {
+    font-size: 1.2rem;
+    color: white;
+    margin-top: -10px;
+}
+
+.debug-logs {
+    padding: 10px;
+    overflow-y: auto;
+    flex-grow: 1;
+    word-break: break-all;
+}
+
+.log-entry {
+    margin-bottom: 5px;
+    border-bottom: 1px dotted #334155;
+    padding-bottom: 5px;
+}
+
+.log-error {
+    color: #ef4444;
+}
+
+.log-success {
+    color: #3b82f6;
+}
+
 /* Ajustes Responsive */
 @media (min-width: 768px) {
     .layout-execute {
