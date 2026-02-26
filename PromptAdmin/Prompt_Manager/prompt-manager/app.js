@@ -22,13 +22,23 @@ const docRef = doc(db, "appData", "useCasesDoc");
 // Variables globales
 let useCases = [];
 let currentExecutingCase = null;
+let localDemos = JSON.parse(localStorage.getItem('prompt_manager_local_demos')) || [];
 
-// Elementos DOM Principales
 const useCasesGrid = document.getElementById('use-cases-grid');
 const emptyState = document.getElementById('empty-state');
 const btnCreatePrompt = document.getElementById('btn-create-prompt');
 const toast = document.getElementById('toast');
 const debugLogs = document.getElementById('debug-logs');
+
+// Demos DOM
+const btnCreateDemo = document.getElementById('btn-create-demo');
+const demosSection = document.getElementById('demos-section');
+const demosGrid = document.getElementById('demos-grid');
+const modalDemo = document.getElementById('modal-demo');
+const formDemo = document.getElementById('form-demo');
+const btnSaveDemo = document.getElementById('btn-save-demo');
+const demoName = document.getElementById('demo-name');
+const demoUrl = document.getElementById('demo-url');
 
 // Función Global de Debug
 function addLog(message, isError = false) {
@@ -64,6 +74,7 @@ const errorModel = document.getElementById('error-model');
 // Inicialización: Cargar la base de datos de la nube
 document.addEventListener('DOMContentLoaded', async () => {
     useCasesGrid.innerHTML = '<div class="empty-state">Conectando con la base de datos global... ⏳</div>';
+    renderLocalDemos();
     await fetchCases();
     renderUseCases();
 });
@@ -147,7 +158,62 @@ btnSaveUseCase.addEventListener('click', async (e) => {
     }
 });
 
-// ---- Renderizar Grilla ----
+// ---- Lógica Crear Proyecto Demo Local ----
+
+btnCreateDemo.addEventListener('click', () => {
+    formDemo.reset();
+    openModal('modal-demo');
+});
+
+btnSaveDemo.addEventListener('click', (e) => {
+    e.preventDefault();
+    if (formDemo.checkValidity()) {
+        const newDemo = {
+            id: Date.now().toString(),
+            name: demoName.value.trim(),
+            url: demoUrl.value.trim()
+        };
+
+        // Guardado local
+        localDemos.push(newDemo);
+        localStorage.setItem('prompt_manager_local_demos', JSON.stringify(localDemos));
+
+        renderLocalDemos();
+        closeModal('modal-demo');
+        showToast('Proyecto Demo guardado en tu dispositivo');
+    } else {
+        formDemo.reportValidity();
+    }
+});
+
+// ---- Renderizar Grillas ----
+
+function renderLocalDemos() {
+    demosGrid.innerHTML = '';
+
+    if (localDemos.length === 0) {
+        demosSection.style.display = 'none';
+    } else {
+        demosSection.style.display = 'block';
+
+        [...localDemos].reverse().forEach((demo) => {
+            const card = document.createElement('div');
+            card.className = 'usecase-card';
+
+            card.innerHTML = `
+                <div style="flex-grow: 1;">
+                    <div style="font-size:0.75rem; color:#8b5cf6; margin-bottom:5px; font-weight:bold;">Proyecto Generado</div>
+                    <h3 class="usecase-title">${demo.name}</h3>
+                </div>
+                <div style="margin-top:15px; display: flex; gap: 10px; align-items: center;">
+                    <a href="${demo.url}" target="_blank" class="btn btn-primary" style="flex-grow: 1; font-size: 0.85rem; text-decoration: none; text-align:center;">🔗 Ver App</a>
+                    <button class="btn btn-outline" style="border-color: #f59e0b; color: #f59e0b; padding: 10px;" onclick="deleteLocalDemo('${demo.id}', event)" title="Ocultar de mi PC">🗑️</button>
+                </div>
+            `;
+            demosGrid.appendChild(card);
+        });
+    }
+}
 
 function renderUseCases() {
     // Limpiar grilla exceptuando el empty state
@@ -180,7 +246,6 @@ function renderUseCases() {
     }
 }
 
-// Acción de eliminar caso
 window.deleteUseCase = async (id, event) => {
     event.stopPropagation(); // Evita abrir el modal
     if (confirm('¿Estás seguro/a que deseas ELIMINAR este Caso de Uso global de forma PERMANENTE?')) {
@@ -192,6 +257,16 @@ window.deleteUseCase = async (id, event) => {
         await saveCases();
         renderUseCases();
         showToast('Caso de Uso eliminado de la base de datos.');
+    }
+};
+
+window.deleteLocalDemo = (id, event) => {
+    event.stopPropagation();
+    if (confirm('¿Deseas ELIMINAR este enlace directamente de tu historial local?')) {
+        localDemos = localDemos.filter(d => d.id !== id);
+        localStorage.setItem('prompt_manager_local_demos', JSON.stringify(localDemos));
+        renderLocalDemos();
+        showToast('Enlace de Proyecto eliminado.');
     }
 };
 

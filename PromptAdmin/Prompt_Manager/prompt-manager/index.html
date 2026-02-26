@@ -16,14 +16,30 @@
         <div class="brand">
             <span class="icon">⚡</span> Prompt Manager
         </div>
-        <button id="btn-create-prompt" class="btn btn-primary">+ Crear Caso de Uso</button>
+        <div style="display:flex; gap:10px;">
+            <button id="btn-create-demo" class="btn btn-outline" style="border-color:white; color:white;">+ Añadir
+                Proyecto Demo</button>
+            <button id="btn-create-prompt" class="btn btn-primary">+ Crear Caso de Uso</button>
+        </div>
     </header>
 
     <!-- Contenido Principal -->
     <main class="main-content">
+        <!-- Sección Demos Locales -->
+        <section class="dashboard" id="demos-section" style="display: none; margin-bottom: 40px;">
+            <div class="section-header">
+                <h2>🚀 Mis Proyectos (Demos)</h2>
+                <p>Enlaces a los resultados y aplicaciones generadas (Solo visibles en este dispositivo).</p>
+            </div>
+            <div id="demos-grid" class="grid-container">
+                <!-- Demos inyectadas mediante JS -->
+            </div>
+        </section>
+
+        <!-- Sección Global -->
         <section class="dashboard">
             <div class="section-header">
-                <h2>Mis Casos de Uso</h2>
+                <h2>🌍 Casos de Uso Globales</h2>
                 <p>Selecciona un caso de uso para ejecutarlo en un modelo de IA.</p>
             </div>
 
@@ -64,6 +80,33 @@
             <div class="modal-footer">
                 <button class="btn btn-outline" onclick="closeModal('modal-create')">Cancelar</button>
                 <button class="btn btn-primary" id="btn-save-usecase">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Registrar Demo Local -->
+    <div id="modal-demo" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Vincular Proyecto Generado</h3>
+                <button class="btn-close" onclick="closeModal('modal-demo')">×</button>
+            </div>
+            <div class="modal-body">
+                <form id="form-demo">
+                    <div class="form-group">
+                        <label for="demo-name">Nombre del Proyecto <span class="required">*</span></label>
+                        <input type="text" id="demo-name" placeholder="Ej. Prosegur Admin Panel" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="demo-url">URL Pública <span class="required">*</span></label>
+                        <input type="url" id="demo-url" placeholder="https://marius-1988.github.io/AI-Projects/..."
+                            required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('modal-demo')">Cancelar</button>
+                <button class="btn btn-primary" id="btn-save-demo">Añadir Proyecto</button>
             </div>
         </div>
     </div>
