@@ -271,6 +271,7 @@ function renderUseCases() {
                 </div>
                 <div style="margin-top:15px; display: flex; gap: 10px; align-items: center;">
                     <button class="btn btn-primary" style="flex-grow: 1; font-size: 0.85rem;" onclick="openExecuteModal('${uc.id}')">⚡ Ejecutar</button>
+                    <button class="btn btn-outline" style="border-color: #10b981; color: #10b981; padding: 10px;" onclick="copyUseCase('${uc.id}', event)" title="Copiar Prompt">📋</button>
                     <button class="btn btn-outline" style="border-color: #ef4444; color: #ef4444; padding: 10px;" onclick="deleteUseCase('${uc.id}', event)" title="Eliminar Caso">🗑️</button>
                 </div>
             `;
@@ -278,6 +279,25 @@ function renderUseCases() {
         });
     }
 }
+
+window.copyUseCase = (id, event) => {
+    event.stopPropagation(); // Evita abrir el modal principal
+    const uc = useCases.find(c => c.id === id);
+    if (!uc) return;
+
+    let textToCopy = uc.rules;
+    // Concatena solo si existe el input de forma segura
+    if (uc.input && uc.input.trim() !== '') {
+        textToCopy = `[REGLAS GENERALES]\n${uc.rules}\n\n[INPUT]\n${uc.input}`;
+    }
+
+    navigator.clipboard.writeText(textToCopy).then(() => {
+        showToast('Prompt copiado al portapapeles');
+    }).catch(err => {
+        console.error('Error al copiar al portapapeles:', err);
+        showToast('Error al copiar al portapapeles');
+    });
+};
 
 window.deleteUseCase = async (id, event) => {
     event.stopPropagation(); // Evita abrir el modal
