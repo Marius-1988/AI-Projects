@@ -299,7 +299,7 @@ window.deleteLocalDemo = (id, event) => {
 
 // ---- Lógica Ejecutar Caso de Uso ----
 
-function openExecuteModal(id) {
+window.openExecuteModal = (id) => {
     const uc = useCases.find(c => c.id === id);
     if (!uc) return;
 
