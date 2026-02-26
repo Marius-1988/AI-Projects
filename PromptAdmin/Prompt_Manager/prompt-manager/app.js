@@ -28,18 +28,21 @@ const defaultDemos = [
     {
         id: "demo-progur-admin",
         name: "Prosegur Admin Panel",
+        desc: "Panel de administración para la gestión de solicitudes y control de operaciones Vigil.",
         path: "/AI-Projects/PromptAdmin/Caso1-Alta_WEB/progur-admin/index.html",
         url: "https://github.com/Marius-1988/AI-Projects/tree/main/PromptAdmin/Caso1-Alta_WEB/progur-admin"
     },
     {
         id: "demo-farmacity",
         name: "Farmacity e-Commerce",
+        desc: "Aplicación de comercio electrónico y pasarela de productos de farmacia.",
         path: "/AI-Projects/PromptAdmin/Caso1-Alta_WEB/farmacity-ecommerce/index.html",
         url: "https://github.com/Marius-1988/AI-Projects/tree/main/PromptAdmin/Caso1-Alta_WEB/farmacity-ecommerce"
     },
     {
         id: "demo-broker",
         name: "Broker Investments Rules",
+        desc: "Plataforma de comparación y análisis algorítmico de productos financieros y fondos de inversión.",
         path: "/AI-Projects/PromptAdmin/Caso1-Alta_WEB/broker-investments-rules/index.html",
         url: "https://github.com/Marius-1988/AI-Projects/tree/main/PromptAdmin/Caso1-Alta_WEB/broker-investments-rules"
     }
@@ -62,6 +65,7 @@ const modalDemo = document.getElementById('modal-demo');
 const formDemo = document.getElementById('form-demo');
 const btnSaveDemo = document.getElementById('btn-save-demo');
 const demoName = document.getElementById('demo-name');
+const demoDesc = document.getElementById('demo-desc');
 const demoPath = document.getElementById('demo-path');
 const demoUrl = document.getElementById('demo-url');
 
@@ -196,6 +200,7 @@ btnSaveDemo.addEventListener('click', (e) => {
         const newDemo = {
             id: Date.now().toString(),
             name: demoName.value.trim(),
+            desc: demoDesc.value.trim(),
             path: demoPath.value.trim(),
             url: demoUrl.value.trim()
         };
@@ -230,6 +235,7 @@ function renderLocalDemos() {
                 <div style="flex-grow: 1;">
                     <div style="font-size:0.75rem; color:#8b5cf6; margin-bottom:5px; font-weight:bold;">Proyecto Generado</div>
                     <h3 class="usecase-title">${demo.name}</h3>
+                    ${demo.desc ? `<p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:10px;">${demo.desc}</p>` : ''}
                 </div>
                 <div style="margin-top:15px; display: flex; gap: 10px; align-items: center;">
                     <a href="${demo.path}" class="btn btn-primary" style="flex-grow: 1; font-size: 0.85rem; text-decoration: none; text-align:center;" title="Abrir Demo">🔗 Ver App</a>
