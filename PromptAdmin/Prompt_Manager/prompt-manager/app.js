@@ -94,7 +94,7 @@ const btnRunPrompt = document.getElementById('btn-run-prompt');
 const consoleOutput = document.getElementById('console-output');
 
 const errorInput = document.getElementById('error-input');
-const errorModel = document.getElementById('error-model');
+// const errorModel = document.getElementById('error-model');
 
 // Inicialización: Cargar la base de datos de la nube
 document.addEventListener('DOMContentLoaded', async () => {
@@ -308,10 +308,9 @@ window.openExecuteModal = (id) => {
     execTitle.textContent = `Ejecutar: ${uc.name}`;
     execRules.value = uc.rules;
     execInput.value = uc.input || '';
-    execModel.value = ''; // Reset modelo
+    execModel.value = 'Antigravity'; // Reset modelo
 
     errorInput.classList.add('hidden');
-    errorModel.classList.add('hidden');
     btnRunPrompt.disabled = false;
 
     resetConsole();
@@ -345,14 +344,9 @@ btnRunPrompt.addEventListener('click', () => {
     // Validaciones
     let isValid = true;
     errorInput.classList.add('hidden');
-    errorModel.classList.add('hidden');
 
     if (!execInput.value.trim()) {
         errorInput.classList.remove('hidden');
-        isValid = false;
-    }
-    if (!execModel.value) {
-        errorModel.classList.remove('hidden');
         isValid = false;
     }
 
