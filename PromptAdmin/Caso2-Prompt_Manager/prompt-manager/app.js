@@ -38,7 +38,16 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 async function fetchCases() {
     try {
-        const response = await fetch(DB_URL);
+        // Obtenemos los datos con control estricto anti-caché
+        const response = await fetch(DB_URL, {
+            method: 'GET',
+            cache: 'no-store',
+            headers: {
+                'Cache-Control': 'no-cache',
+                'Pragma': 'no-cache'
+            }
+        });
+
         if (response.ok) {
             const result = await response.json();
             if (result && result.data && Array.isArray(result.data.useCases)) {
