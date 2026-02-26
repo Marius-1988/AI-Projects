@@ -22,7 +22,31 @@ const docRef = doc(db, "appData", "useCasesDoc");
 // Variables globales
 let useCases = [];
 let currentExecutingCase = null;
-let localDemos = JSON.parse(localStorage.getItem('prompt_manager_local_demos')) || [];
+
+// Array pre-cargado de Demos generados previamente en 3 rutas distintas (mismas que simulan 3 hostings diferentes)
+const defaultDemos = [
+    {
+        id: "demo-progur-admin",
+        name: "Prosegur Admin Panel",
+        path: "/AI-Projects/PromptAdmin/Caso1-Alta_WEB/progur-admin/index.html",
+        url: "https://github.com/Marius-1988/AI-Projects/tree/main/PromptAdmin/Caso1-Alta_WEB/progur-admin"
+    },
+    {
+        id: "demo-farmacity",
+        name: "Farmacity e-Commerce",
+        path: "/AI-Projects/PromptAdmin/Caso1-Alta_WEB/farmacity-ecommerce/index.html",
+        url: "https://github.com/Marius-1988/AI-Projects/tree/main/PromptAdmin/Caso1-Alta_WEB/farmacity-ecommerce"
+    },
+    {
+        id: "demo-broker",
+        name: "Broker Investments Rules",
+        path: "/AI-Projects/PromptAdmin/Caso1-Alta_WEB/broker-investments-rules/index.html",
+        url: "https://github.com/Marius-1988/AI-Projects/tree/main/PromptAdmin/Caso1-Alta_WEB/broker-investments-rules"
+    }
+];
+
+// Se cargan los demos del LocalStorage, y si la lista está completamente vacía (por primera vez o borrada) carga los predeterminados.
+let localDemos = JSON.parse(localStorage.getItem('prompt_manager_local_demos')) || defaultDemos;
 
 const useCasesGrid = document.getElementById('use-cases-grid');
 const emptyState = document.getElementById('empty-state');
