@@ -1,5 +1,25 @@
-// Variables y Base de Datos Global
-const DB_URL = 'https://jsonblob.com/api/jsonBlob/019c9ae4-f89d-7866-83d5-f724b3abe051';
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+// Configuración de Firebase enviada por el usuario
+const firebaseConfig = {
+    apiKey: "AIzaSyCB0bsybB4lvi_1SHXKBcZWnOBunY-zQN4",
+    authDomain: "mariusiaproject.firebaseapp.com",
+    projectId: "mariusiaproject",
+    storageBucket: "mariusiaproject.firebasestorage.app",
+    messagingSenderId: "557250572678",
+    appId: "1:557250572678:web:44c6d371fa8c727d5b3c07",
+    measurementId: "G-RVM1BFD4DN"
+};
+
+// Inicializar Firebase y Base de datos
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// Referencia a nuestro único documento donde guardaremos todos los casos (Colección: "appData", Documento: "useCasesDoc")
+const docRef = doc(db, "appData", "useCasesDoc");
+
+// Variables globales
 let useCases = [];
 let currentExecutingCase = null;
 
@@ -48,58 +68,47 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderUseCases();
 });
 
+// Obtener los casos desde Firebase Firestore
 async function fetchCases() {
     try {
-        addLog("Iniciando FETCH a la DB...");
-        const timestamp = new Date().getTime();
-        const response = await fetch(`${DB_URL}?t=${timestamp}`, {
-            method: 'GET',
-            cache: 'no-store'
-        });
+        addLog("Conectando y descargando desde Firebase Firestore...");
 
-        if (response.ok) {
-            const result = await response.json();
-            addLog(`FETCH Exitoso. Respuesta: ${JSON.stringify(result).substring(0, 100)}...`);
-            if (result && Array.isArray(result.useCases)) {
-                useCases = result.useCases;
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+            const data = docSnap.data();
+            if (data && Array.isArray(data.useCases)) {
+                useCases = data.useCases;
+                addLog(`FETCH Firebase Exitoso: ${useCases.length} casos encontrados.`);
             } else {
                 useCases = [];
-                addLog("Aviso: No se encontraron casos válidos en la respuesta.", true);
+                addLog("Atención: El documento existe pero no tiene el formato correcto.");
             }
         } else {
-            addLog(`Error en respuesta FETCH: ${response.status} ${response.statusText}`, true);
+            addLog("El documento aún no existe en Firebase. Empezaremos desde cero.", true);
             useCases = [];
         }
     } catch (error) {
-        addLog(`Excepción Crítica en Fetch: ${error.message}`, true);
-        console.error("Error al cargar datos:", error);
+        addLog(`Error Crítico de Firebase (Fetch): ${error.message}`, true);
+        console.error("Firebase Error:", error);
         useCases = [];
-        showToast("Error de conexión al cargar el historial global.");
+        showToast("Error al conectar con la base de datos.");
     }
 }
 
-// Guardar los casos en la Nube
+// Guardar los casos en Firebase Firestore
 async function saveCases() {
     try {
-        addLog(`Iniciando SAVE/PUT a la DB con ${useCases.length} items...`);
-        const response = await fetch(DB_URL, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify({ useCases: useCases })
-        });
+        addLog(`Subiendo actualización a Firebase (${useCases.length} items)...`);
 
-        if (response.ok) {
-            addLog(`GUARDADO Exitoso (200 OK).`);
-        } else {
-            const text = await response.text();
-            addLog(`Error en servidor al Guardar: Status ${response.status}. Mensaje: ${text}`, true);
-        }
+        // setDoc sobreescribe el documento entero o lo crea si no existía
+        await setDoc(docRef, { useCases: useCases });
+
+        addLog(`GUARDADO en Firebase Exitoso.`);
     } catch (error) {
-        addLog(`Excepción Crítica en Save: ${error.message}`, true);
-        showToast("Error al guardar en la nube.");
+        addLog(`Error Crítico de Firebase (Save): ${error.message}`, true);
+        console.error("Firebase Error:", error);
+        showToast("Error al sincronizar con la nube.");
     }
 }
 
