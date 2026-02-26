@@ -26,21 +26,10 @@
 
     <!-- Contenido Principal -->
     <main class="main-content">
-        <!-- Sección Demos Locales -->
-        <section class="dashboard" id="demos-section" style="display: none; margin-bottom: 40px;">
-            <div class="section-header">
-                <h2>🚀 Mis Proyectos (Demos)</h2>
-                <p>Enlaces a los resultados y aplicaciones generadas (Solo visibles en este dispositivo).</p>
-            </div>
-            <div id="demos-grid" class="grid-container">
-                <!-- Demos inyectadas mediante JS -->
-            </div>
-        </section>
-
         <!-- Sección Global -->
-        <section class="dashboard">
+        <section class="dashboard" style="margin-bottom: 40px;">
             <div class="section-header">
-                <h2>🌍 Casos de Uso Globales</h2>
+                <h2>🌍 Casos de Uso</h2>
                 <p>Selecciona un caso de uso para ejecutarlo en un modelo de IA.</p>
             </div>
 
@@ -49,6 +38,18 @@
                 <div class="empty-state" id="empty-state">
                     No tienes casos de uso creados todavía. Empieza creando uno nuevo.
                 </div>
+            </div>
+        </section>
+
+        <!-- Sección Demos Locales -->
+        <section class="dashboard" id="demos-section" style="display: none;">
+            <hr style="border: 0; border-top: 1px solid var(--border); margin-bottom: 30px;">
+            <div class="section-header">
+                <h2>🚀 Mis Proyectos</h2>
+                <p>Enlaces a los resultados y aplicaciones generadas (Solo visibles en este dispositivo).</p>
+            </div>
+            <div id="demos-grid" class="grid-container">
+                <!-- Demos inyectadas mediante JS -->
             </div>
         </section>
     </main>
