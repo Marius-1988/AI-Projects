@@ -1,0 +1,265 @@
+/* Base Reset and Typography */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #333;
+    background-color: #f4f6f9;
+}
+
+/* Colors for Prosegur */
+:root {
+    --prosegur-yellow: #FFD100;
+    --prosegur-dark: #333333;
+    --prosegur-black: #000000;
+    --danger-red: #E53935;
+    --surface-color: #FFFFFF;
+    --text-primary: #333333;
+    --text-secondary: #6c757d;
+}
+
+/* Login Page Styles */
+.login-bg {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background: linear-gradient(135deg, var(--prosegur-dark), #111);
+}
+.login-container {
+    width: 100%;
+    max-width: 400px;
+    padding: 20px;
+}
+.login-box {
+    background: var(--surface-color);
+    padding: 40px;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    border-top: 5px solid var(--prosegur-yellow);
+}
+.logo-container {
+    text-align: center;
+    margin-bottom: 30px;
+    background: var(--prosegur-dark);
+    padding: 20px;
+    border-radius: 8px;
+}
+
+/* Inputs */
+.input-group {
+    margin-bottom: 20px;
+}
+.input-group label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: var(--text-primary);
+}
+.input-group input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 14px;
+    transition: border-color 0.3s;
+}
+.input-group input:focus {
+    border-color: var(--prosegur-yellow);
+    outline: none;
+    box-shadow: 0 0 5px rgba(255, 209, 0, 0.3);
+}
+
+/* Buttons */
+button {
+    cursor: pointer;
+    font-weight: bold;
+    border: none;
+    border-radius: 6px;
+    padding: 12px 20px;
+    font-size: 16px;
+    transition: all 0.3s;
+}
+.btn-primary {
+    background-color: var(--prosegur-yellow);
+    color: var(--prosegur-black);
+}
+.btn-primary:hover {
+    background-color: #e6bc00;
+    transform: translateY(-2px);
+}
+.btn-danger {
+    background-color: var(--danger-red);
+    color: white;
+}
+.btn-danger:hover {
+    background-color: #d32f2f;
+    transform: translateY(-2px);
+}
+
+/* Dashboard Layout */
+.dashboard-layout {
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+}
+.sidebar {
+    width: 250px;
+    background-color: var(--prosegur-dark);
+    color: white;
+    display: flex;
+    flex-direction: column;
+}
+.sidebar-header {
+    padding: 20px;
+    background-color: var(--prosegur-black);
+    border-bottom: 3px solid var(--prosegur-yellow);
+}
+.sidebar-nav {
+    flex: 1;
+    padding: 20px 0;
+}
+.sidebar-nav ul {
+    list-style: none;
+}
+.sidebar-nav ul li a {
+    display: block;
+    padding: 15px 20px;
+    color: #ccc;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+.sidebar-nav ul li a:hover, .sidebar-nav ul li.active a {
+    background-color: rgba(255,209,0,0.1);
+    color: var(--prosegur-yellow);
+    border-left: 4px solid var(--prosegur-yellow);
+}
+.sidebar-footer {
+    padding: 20px;
+    border-top: 1px solid #444;
+}
+
+.main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+}
+.topbar {
+    background: white;
+    padding: 20px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.topbar h2 {
+    color: var(--prosegur-dark);
+}
+.user-info {
+    font-weight: bold;
+    color: var(--text-secondary);
+}
+
+/* Dashboard Cards area */
+.dashboard-cards {
+    padding: 30px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 25px;
+}
+.card {
+    background: white;
+    padding: 25px;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    border-top: 4px solid var(--prosegur-dark);
+    transition: transform 0.2s;
+}
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+}
+.card h3 {
+    margin-bottom: 20px;
+    font-size: 18px;
+    color: var(--prosegur-dark);
+    border-bottom: 2px solid var(--prosegur-yellow);
+    padding-bottom: 10px;
+    display: inline-block;
+}
+
+/* Toggle Switch */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 24px;
+}
+.switch input { 
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: #ccc;
+  transition: .4s;
+}
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 16px;
+  width: 16px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  transition: .4s;
+}
+input:checked + .slider {
+  background-color: var(--prosegur-yellow);
+}
+input:checked + .slider:before {
+  transform: translateX(26px);
+}
+.slider.round {
+  border-radius: 34px;
+}
+.slider.round:before {
+  border-radius: 50%;
+}
+.checkbox-group {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+/* Toast Message */
+.toast {
+    visibility: hidden;
+    min-width: 250px;
+    background-color: #4CAF50;
+    color: #fff;
+    text-align: center;
+    border-radius: 6px;
+    padding: 16px;
+    position: fixed;
+    z-index: 1;
+    right: 30px;
+    bottom: 30px;
+    font-size: 16px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    transition: opacity 0.5s;
+    opacity: 0;
+}
+.toast.show {
+    visibility: visible;
+    opacity: 1;
+}
