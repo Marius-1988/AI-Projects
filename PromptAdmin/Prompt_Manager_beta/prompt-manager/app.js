@@ -554,31 +554,75 @@ btnRunPrompt.addEventListener('click', () => {
             };
         }
         else if (model === "GPT4o") {
-            const url = `https://api.openai.com/v1/chat/completions`;
-            const body = {
-                model: "gpt-4o",
+            let modelId = "gpt-4o";
+            let url = `https://api.openai.com/v1/chat/completions`;
+
+            let getBody = (m) => JSON.stringify({
+                model: m,
                 messages: [{ role: "user", content: promptText }]
-            };
-            const response = await fetch(url, {
+            });
+
+            let initParams = {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                     "Authorization": `Bearer ${apiKey}`
                 },
-                body: JSON.stringify(body)
-            });
+                body: getBody(modelId)
+            };
+
+            let response = await fetch(url, initParams);
+
             if (!response.ok) {
-                const err = await response.json();
-                throw new Error(err.error?.message || "Error conectando a OpenAI");
+                const errData = await response.json();
+                const errMsg = errData.error?.message || "";
+
+                if (response.status === 429 || errMsg.toLowerCase().includes("quota") || errMsg.includes("not found")) {
+                    logToConsole(`> ⚠️ Fallo en modelo ${modelId}. Solicitando lista de modelos permitidos a OpenAI...`, 'info');
+
+                    const listResponse = await fetch(`https://api.openai.com/v1/models`, {
+                        headers: { "Authorization": `Bearer ${apiKey}` }
+                    });
+
+                    if (listResponse.ok) {
+                        const listData = await listResponse.json();
+                        // Buscar modelos alternativos más económicos o antiguos habilitados en su Plan (ej. gpt-4o-mini o gpt-3.5-turbo)
+                        const validModel = listData.data?.find(m =>
+                            m.id.includes("gpt-4o-mini") || m.id.includes("gpt-3.5-turbo")
+                        );
+
+                        // Si no hay gpt-algo, tomamos el primer modelo de texto que empiece con gpt
+                        const finalAltModel = validModel ? validModel.id : listData.data?.find(m => m.id.startsWith("gpt-"))?.id;
+
+                        if (finalAltModel) {
+                            modelId = finalAltModel;
+                            logToConsole(`> 🔄 Reintentando conexión utilizando el modelo alternativo permitido: ${modelId}`, 'info');
+                            initParams.body = getBody(modelId);
+                            response = await fetch(url, initParams);
+                        } else {
+                            throw new Error("No se detectó ningún modelo GPT compatible disponible en tu cuenta de OpenAI.");
+                        }
+                    } else {
+                        throw new Error(errMsg); // Lanza el original si no podemos listar
+                    }
+                } else {
+                    throw new Error(errMsg || "Error conectando a OpenAI");
+                }
             }
+
+            if (!response.ok) {
+                const finalErr = await response.json();
+                throw new Error(finalErr.error?.message || "Error conectando a OpenAI (Quota excedida para toda la cuenta)");
+            }
+
             const data = await response.json();
             return {
                 status: response.status,
-                data: data.choices[0]?.message?.content || "Respuesta vacía"
+                data: data.choices?.[0]?.message?.content || "Respuesta vacía"
             };
-        } else {
-            throw new Error("Modelo desconocido");
         }
+
+        throw new Error("Modelo desconocido");
     }
 
     const loadNode = logToConsole(`> Estableciendo Handshake TLS y enviando payload...`, 'loading');
