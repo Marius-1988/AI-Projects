@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prompt Manager</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+    <!-- Menú Superior -->
+    <header class="topbar">
+        <div class="brand">
+            <span class="icon">⚡</span> Prompt Manager
+        </div>
+        <div style="display:flex; gap:10px;">
+            <button id="btn-create-demo" class="btn btn-outline"
+                style="border-color: var(--primary); color: var(--primary); font-weight: 600;">+ Añadir Proyecto
+                Demo</button>
+            <button id="btn-create-prompt" class="btn btn-primary">+ Crear Caso de Uso</button>
+        </div>
+    </header>
+
+    <!-- Contenido Principal -->
+    <main class="main-content">
+        <!-- Sección Global -->
+        <section class="dashboard" style="margin-bottom: 40px;">
+            <div class="section-header">
+                <h2>🌍 Casos de Uso</h2>
+                <p>Selecciona un caso de uso para ejecutarlo en un modelo de IA.</p>
+            </div>
+
+            <div id="use-cases-grid" class="grid-container">
+                <!-- Se inyectan los casos creados a través de JS -->
+                <div class="empty-state" id="empty-state">
+                    No tienes casos de uso creados todavía. Empieza creando uno nuevo.
+                </div>
+            </div>
+        </section>
+
+        <!-- Sección Demos Locales -->
+        <section class="dashboard" id="demos-section" style="display: none;">
+            <hr style="border: 0; border-top: 1px solid var(--border); margin-bottom: 30px;">
+            <div class="section-header">
+                <h2>🚀 Mis Proyectos</h2>
+                <p>Enlaces a los resultados y aplicaciones generadas</p>
+            </div>
+            <div id="demos-grid" class="grid-container">
+                <!-- Demos inyectadas mediante JS -->
+            </div>
+        </section>
+    </main>
+
+    <!-- 1. Modal: Crear Caso de Uso -->
+    <div id="modal-create" class="modal hidden">
+        <div class="modal-content modal-lg">
+            <div class="modal-header">
+                <h3 id="modal-create-title">Nuevo Caso de Uso</h3>
+                <button class="btn-close" onclick="closeModal('modal-create')">×</button>
+            </div>
+            <div class="modal-body">
+                <form id="form-create">
+                    <div class="form-group">
+                        <label for="create-name">Nombre del Caso de Uso <span class="required">*</span></label>
+                        <input type="text" id="create-name" placeholder="Ej. Generador de Copywriting" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="create-rules">Reglas generales del prompt <span class="required">*</span></label>
+                        <textarea id="create-rules" rows="12"
+                            placeholder="Ej. Eres un experto en marketing digital. Tu objetivo es..."
+                            required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="create-input">Input (opcional)</label>
+                        <textarea id="create-input" rows="3" placeholder="Variables o contexto inicial..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('modal-create')">Cancelar</button>
+                <button class="btn btn-primary" id="btn-save-usecase">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Registrar Demo Local -->
+    <div id="modal-demo" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Vincular Proyecto Generado</h3>
+                <button class="btn-close" onclick="closeModal('modal-demo')">×</button>
+            </div>
+            <div class="modal-body">
+                <form id="form-demo">
+                    <div class="form-group">
+                        <label for="demo-name">Nombre del Proyecto <span class="required">*</span></label>
+                        <input type="text" id="demo-name" placeholder="Ej. nombre de tu proyecto" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="demo-desc">Descripción (opcional)</label>
+                        <input type="text" id="demo-desc" placeholder="Breve resumen de la aplicación...">
+                    </div>
+                    <div class="form-group">
+                        <label for="demo-path">Path Proyecto <span class="required">*</span></label>
+                        <input type="text" id="demo-path" placeholder="Ej. /PromptAdmin/tu_proyecto/index.html"
+                            required>
+                    </div>
+                    <div class="form-group">
+                        <label for="demo-url">URL Github <span class="required">*</span></label>
+                        <input type="url" id="demo-url" placeholder="https://github.com/Marius-1988/AI-Projects/..."
+                            required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('modal-demo')">Cancelar</button>
+                <button class="btn btn-primary" id="btn-save-demo">Añadir Proyecto</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. Modal: Ejecutar Caso de Uso -->
+    <div id="modal-execute" class="modal hidden">
+        <div class="modal-content modal-lg">
+            <div class="modal-header">
+                <h3 id="exec-title">Ejecutar Caso de Uso</h3>
+                <button class="btn-close" onclick="closeModal('modal-execute')">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="layout-execute">
+                    <!-- Configuración -->
+                    <div class="exec-config">
+                        <div class="form-group">
+                            <label
+                                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                                <span>Reglas generales del prompt</span>
+                                <button id="btn-edit-rules" type="button" class="btn btn-outline"
+                                    style="border-color: #3b82f6; color: #3b82f6; padding: 4px 8px; font-size: 0.85rem;"
+                                    title="Editar Reglas">✏️</button>
+                            </label>
+                            <textarea id="exec-rules" rows="5" readonly class="readonly-input"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="exec-input">Input <span class="required">*</span></label>
+                            <textarea id="exec-input" rows="4"
+                                placeholder="Escribe tu consulta o variables a enviar al modelo..." required></textarea>
+                            <span class="error-text hidden" id="error-input">El input es obligatorio para
+                                ejecutar.</span>
+                        </div>
+                        <div class="form-group">
+                            <label for="exec-model">Modelo IA <span class="required">*</span></label>
+                            <select id="exec-model" required>
+                                <option value="" disabled selected>Selecciona un modelo...</option>
+                                <option value="Gemini">Gemini</option>
+                                <option value="Cursor">Cursor</option>
+                                <option value="MS Copilot">Microsoft Copilot</option>
+                            </select>
+                            <span class="error-text hidden" id="error-model">Debe seleccionar un modelo de IA.</span>
+                        </div>
+                        <div id="model-info"
+                            style="display: none; background-color: var(--bg-main); padding: 12px; border-radius: var(--radius); margin-top: 10px; font-size: 0.85rem; color: var(--text-muted); border-left: 3px solid var(--primary);">
+                            <strong style="color: var(--primary);">Versión / Modelo:</strong> <span
+                                id="model-version"></span><br>
+                            <strong
+                                style="color: var(--primary); display: inline-block; margin-top: 5px;">Descripción:</strong>
+                            <span id="model-desc"></span>
+                        </div>
+                    </div>
+
+                    <!-- Consola / Respuesta -->
+                    <div class="exec-console">
+                        <h4>Terminal de Ejecución</h4>
+                        <div id="console-output" class="terminal">
+                            <div class="console-line text-muted">A la espera de ejecución...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('modal-execute')">Cancelar</button>
+                <button class="btn btn-success" id="btn-run-prompt">⚡ Ejecutar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notificación emergente -->
+    <div id="toast" class="toast hidden"></div>
+
+    <!-- Panel de Debugging (Oculto en Prod) -->
+    <div id="debug-panel" class="debug-panel hidden" style="display: none !important;">
+        <div class="debug-header">
+            <h4>🐛 Consola de Debug en Vivo</h4>
+            <button class="btn-close"
+                onclick="document.getElementById('debug-panel').classList.toggle('minimized')">_</button>
+        </div>
+        <div id="debug-logs" class="debug-logs"></div>
+    </div>
+
+    <script type="module" src="app.js"></script>
+</body>
+
+</html>
