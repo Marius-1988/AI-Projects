@@ -108,6 +108,33 @@ const modelDescText = document.getElementById('model-desc');
 
 const btnEditRules = document.getElementById('btn-edit-rules');
 
+// Modal Keys
+const modalSettings = document.getElementById('modal-settings');
+const btnSettings = document.getElementById('btn-settings');
+const formSettings = document.getElementById('form-settings');
+const btnSaveSettings = document.getElementById('btn-save-settings');
+
+const keyGemini = document.getElementById('key-gemini');
+const keyAnthropic = document.getElementById('key-anthropic');
+const keyOpenai = document.getElementById('key-openai');
+
+btnSettings.addEventListener('click', () => {
+    // Cargar keys guardadas en localstorage
+    keyGemini.value = localStorage.getItem('prompt_manager_key_gemini') || '';
+    keyAnthropic.value = localStorage.getItem('prompt_manager_key_anthropic') || '';
+    keyOpenai.value = localStorage.getItem('prompt_manager_key_openai') || '';
+    openModal('modal-settings');
+});
+
+btnSaveSettings.addEventListener('click', (e) => {
+    e.preventDefault();
+    localStorage.setItem('prompt_manager_key_gemini', keyGemini.value.trim());
+    localStorage.setItem('prompt_manager_key_anthropic', keyAnthropic.value.trim());
+    localStorage.setItem('prompt_manager_key_openai', keyOpenai.value.trim());
+    closeModal('modal-settings');
+    showToast('API Keys guardadas localmente de forma segura');
+});
+
 // Inicialización: Cargar la base de datos de la nube
 document.addEventListener('DOMContentLoaded', async () => {
     useCasesGrid.innerHTML = '<div class="empty-state">Conectando con la base de datos global... ⏳</div>';
@@ -443,41 +470,100 @@ btnRunPrompt.addEventListener('click', () => {
 
     logToConsole(`> Inicializando conexión con: API de ${selectedModel}`, 'info');
 
-    // Función asíncrona pura simulando un POST a un backend/API
-    async function simulateAIApiCall(model, promtoData) {
-        return new Promise((resolve, reject) => {
-            setTimeout(() => {
-                let responseText = "";
-                let tokens = Math.floor(Math.random() * 500) + 200;
+    // Función que rutea la llamada real a cada API
+    async function executeAIApiCall(model, apiKey, promptText) {
+        if (!apiKey) {
+            throw new Error(`No hay API Key configurada para ${model}. Configurala en la tuerca ⚙️ de la pantalla inicial.`);
+        }
 
-                if (model === "Gemini") {
-                    responseText = `[Respuesta de Gemini 1.5 Pro]\nHe procesado los ${tokens} tokens de tu prompt estructurado.\n\nResultado analítico: Todo está bajo control. La ventana de contexto expansiva permite captar el más mínimo detalle de tus reglas.`;
-                } else if (model === "Cursor") {
-                    responseText = `[Respuesta de Cursor (Claude 3.5 Sonnet)]\n<thought>\nAnalizando contexto de código...\n</thought>\nHe revisado tus instrucciones y variables. Adjunto las dependencias sugeridas y el refactor listo para ser integrado en el archivo principal.`;
-                } else if (model === "MS Copilot") {
-                    responseText = `[Respuesta de Microsoft Copilot (GPT-4o)]\n¡Hola! He generado el documento solicitado alineado con tus convenciones empresariales, optimizando la estructura para Microsoft 365.`;
-                } else {
-                    reject(new Error("Modelo desconocido"));
-                    return;
-                }
-
-                resolve({
-                    status: 200,
-                    data: responseText,
-                    tokens: tokens
-                });
-            }, 3000); // 3 segundos de latencia artificial de API
-        });
+        if (model === "Gemini") {
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+            const body = {
+                contents: [{ parts: [{ text: promptText }] }]
+            };
+            const response = await fetch(url, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(body)
+            });
+            if (!response.ok) {
+                const err = await response.json();
+                throw new Error(err.error?.message || "Error conectando a Gemini");
+            }
+            const data = await response.json();
+            return {
+                status: response.status,
+                data: data.candidates[0]?.content?.parts[0]?.text || "Respuesta vacía"
+            };
+        }
+        else if (model === "Claude") {
+            const url = `https://api.anthropic.com/v1/messages`;
+            const body = {
+                model: "claude-3-5-sonnet-20241022",
+                max_tokens: 4096,
+                messages: [{ role: "user", content: promptText }]
+            };
+            const response = await fetch(url, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "x-api-key": apiKey,
+                    "anthropic-version": "2023-06-01",
+                    "anthropic-dangerous-direct-browser-access": "true" // Solo para uso de prueba local/cliente
+                },
+                body: JSON.stringify(body)
+            });
+            if (!response.ok) {
+                const err = await response.json();
+                throw new Error(err.error?.message || "Error conectando a Anthropic");
+            }
+            const data = await response.json();
+            return {
+                status: response.status,
+                data: data.content[0]?.text || "Respuesta vacía"
+            };
+        }
+        else if (model === "GPT4o") {
+            const url = `https://api.openai.com/v1/chat/completions`;
+            const body = {
+                model: "gpt-4o",
+                messages: [{ role: "user", content: promptText }]
+            };
+            const response = await fetch(url, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${apiKey}`
+                },
+                body: JSON.stringify(body)
+            });
+            if (!response.ok) {
+                const err = await response.json();
+                throw new Error(err.error?.message || "Error conectando a OpenAI");
+            }
+            const data = await response.json();
+            return {
+                status: response.status,
+                data: data.choices[0]?.message?.content || "Respuesta vacía"
+            };
+        } else {
+            throw new Error("Modelo desconocido");
+        }
     }
 
     const loadNode = logToConsole(`> Estableciendo Handshake TLS y enviando payload...`, 'loading');
 
-    // Ejecuta la llamada a la pseudo-API
-    simulateAIApiCall(selectedModel, finalPrompt)
+    // Rescatar API KEYs en el momento de la ejecución
+    let activeKey = '';
+    if (selectedModel === 'Gemini') activeKey = localStorage.getItem('prompt_manager_key_gemini');
+    if (selectedModel === 'Claude') activeKey = localStorage.getItem('prompt_manager_key_anthropic');
+    if (selectedModel === 'GPT4o') activeKey = localStorage.getItem('prompt_manager_key_openai');
+
+    // Ejecuta la llamada REAL a la API
+    executeAIApiCall(selectedModel, activeKey, finalPrompt)
         .then(response => {
             loadNode.classList.remove('loading');
             logToConsole(`> ✅ [HTTP ${response.status} OK] Conexión cerrada.`, 'success');
-            logToConsole(`> 📊 Telemetría: Procesados ${response.tokens} tokens`, 'info');
             logToConsole(`--------------- RESULTADO DE LA API ---------------`, 'normal');
 
             // Imprimir la respuesta en líneas para mejorar legibilidad
@@ -495,19 +581,19 @@ btnRunPrompt.addEventListener('click', () => {
         });
 });
 
-// Detalles de Modelos
+// Detalles de Modelos (Alineado con los select values)
 const modelDetails = {
     'Gemini': {
-        version: 'Gemini 1.5 Pro y 1.5 Flash',
-        desc: 'La versión 1.5 Pro destaca por su ventana de contexto de hasta 2 millones de tokens.'
+        version: 'Gemini 1.5 Flash',
+        desc: 'Conexión directa SSL con Google Vertex AI. Procesamiento hiperrápido.'
     },
-    'Cursor': {
-        version: 'v0.45.x',
-        desc: 'El editor de código suele actualizarse cada pocos días; actualmente utiliza Claude 3.5 Sonnet como modelo por defecto.'
+    'Claude': {
+        version: 'Claude 3.5 Sonnet (Reemplazo API de Cursor)',
+        desc: 'Las IAs no devuelven "archivos de proyecto", solo bloques de código. Cópialos en tu VSCode o Cursor manualmente.'
     },
-    'MS Copilot': {
-        version: 'GPT-4o',
-        desc: 'Integrado en Windows y Microsoft 365, utiliza la infraestructura más reciente de OpenAI.'
+    'GPT4o': {
+        version: 'GPT-4o (Reemplazo API de MS Copilot)',
+        desc: 'Modelo core de OpenAI utilizado en la arquitectura interna de Microsoft Copilot.'
     }
 };
 
