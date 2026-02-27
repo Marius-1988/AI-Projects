@@ -477,7 +477,7 @@ btnRunPrompt.addEventListener('click', () => {
         }
 
         if (model === "Gemini") {
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`;
             const body = {
                 contents: [{ parts: [{ text: promptText }] }]
             };
