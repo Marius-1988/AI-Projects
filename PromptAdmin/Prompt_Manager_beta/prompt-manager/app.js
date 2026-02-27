@@ -477,23 +477,53 @@ btnRunPrompt.addEventListener('click', () => {
         }
 
         if (model === "Gemini") {
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`;
-            const body = {
-                contents: [{ parts: [{ text: promptText }] }]
-            };
-            const response = await fetch(url, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(body)
-            });
+            let modelId = "gemini-1.5-flash"; // Estándar actual
+            let url = `https://generativelanguage.googleapis.com/v1beta/models/${modelId}:generateContent?key=${apiKey}`;
+            const body = { contents: [{ parts: [{ text: promptText }] }] };
+            let initParams = { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) };
+
+            let response = await fetch(url, initParams);
+
+            // Si falla por modelo no encontrado, hacemos fallback inteligente consultando la lista de modelos de su API Key
             if (!response.ok) {
-                const err = await response.json();
-                throw new Error(err.error?.message || "Error conectando a Gemini");
+                const errData = await response.json();
+                const errMsg = errData.error?.message || "";
+
+                if (errMsg.includes("is not found") || errMsg.includes("not supported")) {
+                    logToConsole(`> ⚠️ El modelo por defecto falló. Solicitando lista de modelos permitidos a Google...`, 'info');
+                    const listResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
+                    if (listResponse.ok) {
+                        const listData = await listResponse.json();
+                        // Buscar el primer modelo de texto que soporte generateContent
+                        const validModel = listData.models?.find(m =>
+                            m.supportedGenerationMethods?.includes("generateContent") &&
+                            m.name.includes("gemini")
+                        );
+                        if (validModel) {
+                            modelId = validModel.name.replace("models/", ""); // ej "gemini-1.0-pro"
+                            logToConsole(`> 🔄 Reintentando conexión utilizando el modelo compatible detectado: ${modelId}`, 'info');
+                            url = `https://generativelanguage.googleapis.com/v1beta/models/${modelId}:generateContent?key=${apiKey}`;
+                            response = await fetch(url, initParams);
+                        } else {
+                            throw new Error("Tu API Key no tiene ningún modelo Gemini disponible para generar contenido.");
+                        }
+                    } else {
+                        throw new Error(errMsg); // Lanza el original si no podemos listar
+                    }
+                } else {
+                    throw new Error(errMsg || "Error conectando a Gemini");
+                }
             }
+
+            if (!response.ok) {
+                const finalErr = await response.json();
+                throw new Error(finalErr.error?.message || "Error conectando a Gemini");
+            }
+
             const data = await response.json();
             return {
                 status: response.status,
-                data: data.candidates[0]?.content?.parts[0]?.text || "Respuesta vacía"
+                data: data.candidates?.[0]?.content?.parts?.[0]?.text || "Respuesta vacía"
             };
         }
         else if (model === "Claude") {
