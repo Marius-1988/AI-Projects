@@ -247,7 +247,8 @@ h4 {
 }
 
 .modal-lg {
-    max-width: 800px;
+    max-width: 1200px;
+    width: 95vw;
 }
 
 .modal-header {
@@ -451,7 +452,7 @@ h4 {
     }
 
     .exec-config {
-        flex: 1;
+        flex: 1.8;
     }
 
     .exec-console {
