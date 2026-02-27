@@ -80,8 +80,10 @@ function addLog(message, isError = false) {
     debugLogs.scrollTop = debugLogs.scrollHeight;
 }
 
-// Modal Crear Contexto
+// Modal Crear/Editar Contexto
 const modalCreate = document.getElementById('modal-create');
+const modalCreateTitle = document.getElementById('modal-create-title');
+let editingUseCaseId = null;
 const formCreate = document.getElementById('form-create');
 const btnSaveUseCase = document.getElementById('btn-save-usecase');
 const createName = document.getElementById('create-name');
@@ -156,32 +158,46 @@ async function saveCases() {
 
 btnCreatePrompt.addEventListener('click', () => {
     formCreate.reset();
+    editingUseCaseId = null;
+    if (modalCreateTitle) modalCreateTitle.textContent = 'Nuevo Caso de Uso';
     openModal('modal-create');
 });
 
 btnSaveUseCase.addEventListener('click', async (e) => {
     e.preventDefault();
     if (formCreate.checkValidity()) {
-        const newCase = {
-            id: Date.now().toString(),
-            name: createName.value.trim(),
-            rules: createRules.value.trim(),
-            input: createInput.value.trim()
-        };
-
         btnSaveUseCase.disabled = true;
         btnSaveUseCase.textContent = 'Guardando...';
 
-        // Agregar y sincronizar
-        useCases.push(newCase);
-        await saveCases();
+        if (editingUseCaseId) {
+            // Actualizar existente
+            const ucIndex = useCases.findIndex(c => c.id === editingUseCaseId);
+            if (ucIndex !== -1) {
+                useCases[ucIndex].name = createName.value.trim();
+                useCases[ucIndex].rules = createRules.value.trim();
+                useCases[ucIndex].input = createInput.value.trim();
+            }
+            await saveCases();
+            showToast('Caso de Uso actualizado exitosamente');
+        } else {
+            // Agregar nuevo y sincronizar
+            const newCase = {
+                id: Date.now().toString(),
+                name: createName.value.trim(),
+                rules: createRules.value.trim(),
+                input: createInput.value.trim()
+            };
+            useCases.push(newCase);
+            await saveCases();
+            showToast('Caso de Uso global guardado exitosamente');
+        }
 
         renderUseCases();
         closeModal('modal-create');
-        showToast('Caso de Uso global guardado exitosamente');
 
         btnSaveUseCase.disabled = false;
         btnSaveUseCase.textContent = 'Guardar';
+        editingUseCaseId = null;
     } else {
         formCreate.reportValidity();
     }
@@ -271,6 +287,7 @@ function renderUseCases() {
                 </div>
                 <div style="margin-top:15px; display: flex; gap: 10px; align-items: center;">
                     <button class="btn btn-primary" style="flex-grow: 1; font-size: 0.85rem;" onclick="openExecuteModal('${uc.id}')">⚡ Ejecutar</button>
+                    <button class="btn btn-outline" style="border-color: #3b82f6; color: #3b82f6; padding: 10px;" onclick="editUseCase('${uc.id}', event)" title="Editar Caso">✏️</button>
                     <button class="btn btn-outline" style="border-color: #10b981; color: #10b981; padding: 10px;" onclick="copyUseCase('${uc.id}', event)" title="Copiar Prompt">📋</button>
                     <button class="btn btn-outline" style="border-color: #ef4444; color: #ef4444; padding: 10px;" onclick="deleteUseCase('${uc.id}', event)" title="Eliminar Caso">🗑️</button>
                 </div>
@@ -279,6 +296,21 @@ function renderUseCases() {
         });
     }
 }
+
+window.editUseCase = (id, event) => {
+    event.stopPropagation();
+    const uc = useCases.find(c => c.id === id);
+    if (!uc) return;
+
+    editingUseCaseId = id;
+    if (modalCreateTitle) modalCreateTitle.textContent = 'Editar Caso de Uso';
+
+    createName.value = uc.name;
+    createRules.value = uc.rules;
+    createInput.value = uc.input || '';
+
+    openModal('modal-create');
+};
 
 window.copyUseCase = (id, event) => {
     event.stopPropagation(); // Evita abrir el modal principal
