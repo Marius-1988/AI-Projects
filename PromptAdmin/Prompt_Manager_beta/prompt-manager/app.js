@@ -596,8 +596,29 @@ btnRunPrompt.addEventListener('click', () => {
             logToConsole(`> ✅ [HTTP ${response.status} OK] Conexión cerrada.`, 'success');
             logToConsole(`--------------- RESULTADO DE LA API ---------------`, 'normal');
 
+            const textData = response.data;
+
+            // Detección mágica de código HTML (POC Zero Setup)
+            const htmlMatch = textData.match(/```html\s*([\s\S]*?)```/);
+            if (htmlMatch && htmlMatch[1]) {
+                const htmlContent = htmlMatch[1];
+                const blob = new Blob([htmlContent], { type: 'text/html' });
+                const blobUrl = URL.createObjectURL(blob);
+
+                logToConsole(`> 🌐 ¡Aplicación Web Detectada en la respuesta!`, 'success');
+
+                // Inyectar enlace clickeable directamente en el DOM de la consola
+                const linkLine = document.createElement('div');
+                linkLine.className = 'console-line';
+                linkLine.style.margin = '10px 0';
+                linkLine.innerHTML = `👉 <a href="${blobUrl}" target="_blank" style="color: #10b981; font-weight: bold; text-decoration: underline; font-size: 1.1em; background: rgba(16, 185, 129, 0.1); padding: 5px 10px; border-radius: 4px; display: inline-block;">ABRIR APLICACIÓN GENERADA (index.html)</a> 👈`;
+                consoleOutput.appendChild(linkLine);
+
+                logToConsole(`---------------------------------------------------`, 'normal');
+            }
+
             // Imprimir la respuesta en líneas para mejorar legibilidad
-            const lines = response.data.split('\\n');
+            const lines = textData.split(/\r?\n/);
             lines.forEach(l => logToConsole(l, 'text-muted'));
 
             logToConsole(`---------------------------------------------------`, 'normal');
