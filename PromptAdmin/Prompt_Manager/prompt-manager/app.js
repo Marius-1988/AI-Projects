@@ -102,6 +102,8 @@ const consoleOutput = document.getElementById('console-output');
 const errorInput = document.getElementById('error-input');
 // const errorModel = document.getElementById('error-model');
 
+const btnEditRules = document.getElementById('btn-edit-rules');
+
 // Inicialización: Cargar la base de datos de la nube
 document.addEventListener('DOMContentLoaded', async () => {
     useCasesGrid.innerHTML = '<div class="empty-state">Conectando con la base de datos global... ⏳</div>';
@@ -287,7 +289,6 @@ function renderUseCases() {
                 </div>
                 <div style="margin-top:15px; display: flex; gap: 10px; align-items: center;">
                     <button class="btn btn-primary" style="flex-grow: 1; font-size: 0.85rem;" onclick="openExecuteModal('${uc.id}')">⚡ Ejecutar</button>
-                    <button class="btn btn-outline" style="border-color: #3b82f6; color: #3b82f6; padding: 10px;" onclick="editUseCase('${uc.id}', event)" title="Editar Caso">✏️</button>
                     <button class="btn btn-outline" style="border-color: #10b981; color: #10b981; padding: 10px;" onclick="copyUseCase('${uc.id}', event)" title="Copiar Prompt">📋</button>
                     <button class="btn btn-outline" style="border-color: #ef4444; color: #ef4444; padding: 10px;" onclick="deleteUseCase('${uc.id}', event)" title="Eliminar Caso">🗑️</button>
                 </div>
@@ -298,7 +299,7 @@ function renderUseCases() {
 }
 
 window.editUseCase = (id, event) => {
-    event.stopPropagation();
+    if (event) event.stopPropagation();
     const uc = useCases.find(c => c.id === id);
     if (!uc) return;
 
@@ -311,6 +312,15 @@ window.editUseCase = (id, event) => {
 
     openModal('modal-create');
 };
+
+if (btnEditRules) {
+    btnEditRules.addEventListener('click', (e) => {
+        if (currentExecutingCase) {
+            closeModal('modal-execute');
+            window.editUseCase(currentExecutingCase.id, e);
+        }
+    });
+}
 
 window.copyUseCase = (id, event) => {
     event.stopPropagation(); // Evita abrir el modal principal

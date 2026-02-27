@@ -134,7 +134,13 @@
                     <!-- Configuración -->
                     <div class="exec-config">
                         <div class="form-group">
-                            <label>Reglas generales del prompt</label>
+                            <label
+                                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                                <span>Reglas generales del prompt</span>
+                                <button id="btn-edit-rules" type="button" class="btn btn-outline"
+                                    style="border-color: #3b82f6; color: #3b82f6; padding: 4px 8px; font-size: 0.85rem;"
+                                    title="Editar Reglas">✏️</button>
+                            </label>
                             <textarea id="exec-rules" rows="5" readonly class="readonly-input"></textarea>
                         </div>
                         <div class="form-group">
