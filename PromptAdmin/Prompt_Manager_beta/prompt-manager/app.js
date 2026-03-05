@@ -23,6 +23,7 @@ const docRef = doc(db, "appData", "useCasesDoc");
 let useCases = [];
 let sections = [];
 let currentExecutingCase = null;
+let currentMessagesHistory = [];
 let currentView = 'dashboard';
 
 // Punteros al DOM (Sidebar y Secciones)
@@ -653,15 +654,18 @@ window.openExecuteModal = (id) => {
     if (!uc) return;
 
     currentExecutingCase = uc;
+    currentMessagesHistory = []; // Resetear historial
 
     execTitle.textContent = `Ejecutar: ${uc.name}`;
     execRules.value = uc.rules;
     execInput.value = uc.input || '';
     execModel.value = ''; // Reset modelo
+    execModel.disabled = false; // Desbloquear selector por si estaba bloqueado en una iteracion
 
     errorInput.classList.add('hidden');
     errorModel.classList.add('hidden');
     btnRunPrompt.disabled = false;
+    btnRunPrompt.textContent = '⚡ Ejecutar';
 
     resetConsole();
     openModal('modal-execute');
@@ -708,19 +712,30 @@ btnRunPrompt.addEventListener('click', () => {
     if (!isValid) return;
 
     btnRunPrompt.disabled = true;
-    resetConsole();
 
     const selectedModel = execModel.value;
-    const rules = currentExecutingCase.rules;
-    const userInput = execInput.value;
 
-    // Crear el prompt final unificado
-    const finalPrompt = `[REGLAS GENERALES]\n${rules}\n\n[INPUT]\n${userInput}`;
+    if (currentMessagesHistory.length === 0) {
+        // Primera ejecución limpia
+        resetConsole();
+        const rules = currentExecutingCase.rules;
+        const userInput = execInput.value;
+        const finalPrompt = `[REGLAS GENERALES]\n${rules}\n\n[INPUT]\n${userInput}`;
 
-    logToConsole(`> Inicializando conexión con: API de ${selectedModel}`, 'info');
+        currentMessagesHistory.push({ role: "user", content: finalPrompt });
+        logToConsole(`> Inicializando conexión con: API de ${selectedModel}`, 'info');
+        execModel.disabled = true; // Bloqueamos el selector de IA para mantener el contexto con la misma arquitectura
+    } else {
+        // Ejecución iterativa / chat
+        const userInput = execInput.value;
+        currentMessagesHistory.push({ role: "user", content: userInput });
+        logToConsole(`> 💬 Enviando iteración: "${userInput.substring(0, 50)}..."`, 'info');
+    }
 
-    // Función que rutea la llamada real a cada API
-    async function executeAIApiCall(model, apiKey, promptText) {
+    execInput.value = ''; // Limpiamos la caja de texto para la próxima iteración
+
+    // Función que rutea la llamada real a cada API, ahora recibe historial completo
+    async function executeAIApiCall(model, apiKey, messagesHistory) {
         if (!apiKey) {
             throw new Error(`No hay API Key configurada para ${model}. Configurala en la tuerca ⚙️ de la pantalla inicial.`);
         }
@@ -728,7 +743,12 @@ btnRunPrompt.addEventListener('click', () => {
         if (model === "Gemini") {
             let modelId = "gemini-1.5-flash"; // Estándar actual
             let url = `https://generativelanguage.googleapis.com/v1beta/models/${modelId}:generateContent?key=${apiKey}`;
-            const body = { contents: [{ parts: [{ text: promptText }] }] };
+            const body = {
+                contents: messagesHistory.map(m => ({
+                    role: m.role === "assistant" ? "model" : "user",
+                    parts: [{ text: m.content }]
+                }))
+            };
             let initParams = { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) };
 
             let response = await fetch(url, initParams);
@@ -782,7 +802,7 @@ btnRunPrompt.addEventListener('click', () => {
             let getBody = (m) => JSON.stringify({
                 model: m,
                 max_tokens: 4096,
-                messages: [{ role: "user", content: promptText }]
+                messages: messagesHistory
             });
 
             let initParams = {
@@ -852,7 +872,7 @@ btnRunPrompt.addEventListener('click', () => {
 
             let getBody = (m) => JSON.stringify({
                 model: m,
-                messages: [{ role: "user", content: promptText }]
+                messages: messagesHistory
             });
 
             let initParams = {
@@ -927,7 +947,7 @@ btnRunPrompt.addEventListener('click', () => {
     if (selectedModel === 'GPT4o') activeKey = localStorage.getItem('prompt_manager_key_openai');
 
     // Ejecuta la llamada REAL a la API
-    executeAIApiCall(selectedModel, activeKey, finalPrompt)
+    executeAIApiCall(selectedModel, activeKey, currentMessagesHistory)
         .then(async response => {
             loadNode.classList.remove('loading');
             logToConsole(`> ✅ [HTTP ${response.status} OK] Conexión cerrada.`, 'success');
@@ -944,6 +964,7 @@ btnRunPrompt.addEventListener('click', () => {
             }
 
             const textData = response.data;
+            currentMessagesHistory.push({ role: "assistant", content: textData });
 
             // Detección mágica de código HTML (POC Zero Setup)
             const htmlMatch = textData.match(/```html\s*([\s\S]*?)```/);
@@ -976,6 +997,8 @@ btnRunPrompt.addEventListener('click', () => {
         })
         .finally(() => {
             btnRunPrompt.disabled = false;
+            btnRunPrompt.textContent = '⚡ Iterar / Enviar';
+            execInput.focus();
         });
 });
 
