@@ -168,6 +168,28 @@ btnSaveSettings.addEventListener('click', (e) => {
 document.addEventListener('DOMContentLoaded', async () => {
     // Al iniciar escondemos todo y mostramos un loader si quisieramos
     await fetchCases();
+
+    // Compatibilidad con Casos Huérfanos
+    const orphanCases = useCases.filter(uc => !uc.sectionId);
+    if (orphanCases.length > 0) {
+        let defaultSection = sections.find(s => s.name === "Demos rápidas");
+        if (!defaultSection) {
+            defaultSection = {
+                id: 'sec_' + Date.now().toString(),
+                name: "Demos rápidas",
+                desc: "Casos de uso creados previamente."
+            };
+            sections.push(defaultSection);
+        }
+
+        orphanCases.forEach(uc => {
+            uc.sectionId = defaultSection.id;
+        });
+
+        // Guardamos todo de forma global
+        await saveCases();
+    }
+
     renderLocalDemos();
     renderSectionsMenu();
     updateSectionDropdowns();
