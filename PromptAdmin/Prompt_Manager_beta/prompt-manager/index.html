@@ -26,35 +26,67 @@
         </div>
     </header>
 
-    <!-- Contenido Principal -->
-    <main class="main-content">
-        <!-- Sección Global -->
-        <section class="dashboard" style="margin-bottom: 40px;">
-            <div class="section-header">
-                <h2>🌍 Casos de Uso</h2>
-                <p>Selecciona un caso de uso para ejecutarlo en un modelo de IA.</p>
+    <!-- Interfaz Principal (Sidebar + Contenido) -->
+    <div class="layout-container">
+        <!-- Barra Lateral -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h3>Navegación</h3>
             </div>
 
-            <div id="use-cases-grid" class="grid-container">
-                <!-- Se inyectan los casos creados a través de JS -->
-                <div class="empty-state" id="empty-state">
-                    No tienes casos de uso creados todavía. Empieza creando uno nuevo.
+            <ul class="sidebar-nav" id="sidebar-nav">
+                <li class="nav-item active" id="nav-dashboard">🏠 Inicio (Dashboard)</li>
+                <div class="nav-divider"></div>
+                <div class="sidebar-subheader">SECCIONES</div>
+                <!-- Se inyectan las secciones con JS -->
+                <div id="sections-list"></div>
+            </ul>
+
+            <div class="sidebar-footer">
+                <button id="btn-create-section" class="btn btn-outline" style="width: 100%; font-size: 0.85rem;">+
+                    Añadir Sección</button>
+            </div>
+        </aside>
+
+        <!-- Contenido Principal -->
+        <main class="main-content">
+            <!-- Sección Global: Dashboard -->
+            <section class="dashboard" id="dashboard-section" style="margin-bottom: 40px;">
+                <div class="section-header">
+                    <h2>🚀 Populares (Top 5)</h2>
+                    <p>Los casos de uso con mayor cantidad de ejecuciones.</p>
                 </div>
-            </div>
-        </section>
+                <div id="popular-cases-grid" class="grid-container">
+                    <!-- Se inyectan los casos más populares (max 5) -->
+                </div>
 
-        <!-- Sección Demos Locales -->
-        <section class="dashboard" id="demos-section" style="display: none;">
-            <hr style="border: 0; border-top: 1px solid var(--border); margin-bottom: 30px;">
-            <div class="section-header">
-                <h2>🚀 Mis Proyectos</h2>
-                <p>Enlaces a los resultados y aplicaciones generadas</p>
-            </div>
-            <div id="demos-grid" class="grid-container">
-                <!-- Demos inyectadas mediante JS -->
-            </div>
-        </section>
-    </main>
+                <hr style="border: 0; border-top: 1px solid var(--border); margin: 30px 0;">
+
+                <div class="section-header">
+                    <h2>🛠 Mis Proyectos</h2>
+                    <p>Enlaces a los resultados y aplicaciones generadas.</p>
+                </div>
+                <div id="demos-grid" class="grid-container">
+                    <!-- Demos inyectadas mediante JS -->
+                </div>
+            </section>
+
+            <!-- Sección Dinámica por "Sección" -->
+            <section class="dashboard" id="dynamic-section" style="display: none; margin-bottom: 40px;">
+                <div class="section-header">
+                    <h2 id="dynamic-section-title">🌍 Título Sección</h2>
+                    <p id="dynamic-section-desc">Descripción de la sección...</p>
+                </div>
+
+                <div id="use-cases-grid" class="grid-container">
+                    <!-- Se inyectan los casos creados en esta sección a través de JS -->
+                    <div class="empty-state" id="empty-state">
+                        Esta sección está vacía. Crea un Caso de Uso y asígnalo aquí.
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
 
     <!-- 1. Modal: Crear Caso de Uso -->
     <div id="modal-create" class="modal hidden">
@@ -68,6 +100,15 @@
                     <div class="form-group">
                         <label for="create-name">Nombre del Caso de Uso <span class="required">*</span></label>
                         <input type="text" id="create-name" placeholder="Ej. Generador de Copywriting" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="create-section">Sección <span class="required">*</span></label>
+                        <select id="create-section" required>
+                            <option value="" disabled selected>Selecciona una sección...</option>
+                            <!-- Se inyecta por JS -->
+                        </select>
+                        <span class="error-text hidden" id="error-create-section">Por favor selecciona una sección, o
+                            crea una primero en el menú lateral.</span>
                     </div>
                     <div class="form-group">
                         <label for="create-rules">Reglas generales del prompt <span class="required">*</span></label>
@@ -221,6 +262,32 @@
             <div class="modal-footer">
                 <button class="btn btn-outline" onclick="closeModal('modal-settings')">Cerrar</button>
                 <button class="btn btn-primary" id="btn-save-settings">Guardar Keys Localmente</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Crear Sección -->
+    <div id="modal-section" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Nueva Sección</h3>
+                <button class="btn-close" onclick="closeModal('modal-section')">×</button>
+            </div>
+            <div class="modal-body">
+                <form id="form-section">
+                    <div class="form-group">
+                        <label for="section-name">Nombre de la sección <span class="required">*</span></label>
+                        <input type="text" id="section-name" placeholder="Ej. Redacción" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="section-desc">Descripción (opcional)</label>
+                        <input type="text" id="section-desc" placeholder="Plantillas y correos de ventas">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('modal-section')">Cancelar</button>
+                <button class="btn btn-primary" id="btn-save-section">Guardar</button>
             </div>
         </div>
     </div>

@@ -21,7 +21,26 @@ const docRef = doc(db, "appData", "useCasesDoc");
 
 // Variables globales
 let useCases = [];
+let sections = [];
 let currentExecutingCase = null;
+let currentView = 'dashboard';
+
+// Punteros al DOM (Sidebar y Secciones)
+const navDashboard = document.getElementById('nav-dashboard');
+const sectionsList = document.getElementById('sections-list');
+const btnCreateSection = document.getElementById('btn-create-section');
+const modalSection = document.getElementById('modal-section');
+const formSection = document.getElementById('form-section');
+const btnSaveSection = document.getElementById('btn-save-section');
+const sectionNameInput = document.getElementById('section-name');
+const sectionDescInput = document.getElementById('section-desc');
+
+const createSectionSelect = document.getElementById('create-section');
+const dashboardSection = document.getElementById('dashboard-section');
+const dynamicSection = document.getElementById('dynamic-section');
+const dynamicSectionTitle = document.getElementById('dynamic-section-title');
+const dynamicSectionDesc = document.getElementById('dynamic-section-desc');
+const popularCasesGrid = document.getElementById('popular-cases-grid');
 
 // Array pre-cargado de Demos generados previamente en 3 rutas distintas (mismas que simulan 3 hostings diferentes)
 const defaultDemos = [
@@ -137,11 +156,90 @@ btnSaveSettings.addEventListener('click', (e) => {
 
 // Inicialización: Cargar la base de datos de la nube
 document.addEventListener('DOMContentLoaded', async () => {
-    useCasesGrid.innerHTML = '<div class="empty-state">Conectando con la base de datos global... ⏳</div>';
-    renderLocalDemos();
+    // Al iniciar escondemos todo y mostramos un loader si quisieramos
     await fetchCases();
-    renderUseCases();
+    renderLocalDemos();
+    renderSectionsMenu();
+    updateSectionDropdowns();
+    switchView('dashboard');
 });
+
+// Lógica Sidebar
+navDashboard.addEventListener('click', () => switchView('dashboard'));
+btnCreateSection.addEventListener('click', () => {
+    formSection.reset();
+    openModal('modal-section');
+});
+
+btnSaveSection.addEventListener('click', async (e) => {
+    e.preventDefault();
+    if (formSection.checkValidity()) {
+        const newSection = {
+            id: 'sec_' + Date.now().toString(),
+            name: sectionNameInput.value.trim(),
+            desc: sectionDescInput.value.trim()
+        };
+        sections.push(newSection);
+        await saveCases(); // Save synchronizes everything
+        renderSectionsMenu();
+        updateSectionDropdowns();
+        closeModal('modal-section');
+        showToast('Sección creada exitosamente');
+    } else {
+        formSection.reportValidity();
+    }
+});
+
+function switchView(viewId) {
+    currentView = viewId;
+
+    // Quitar active class de todos los items
+    document.querySelectorAll('.sidebar-nav .nav-item').forEach(el => el.classList.remove('active'));
+
+    if (viewId === 'dashboard') {
+        navDashboard.classList.add('active');
+        dashboardSection.style.display = 'block';
+        dynamicSection.style.display = 'none';
+        renderPopularCases();
+    } else {
+        // Buscar el item clickeado en la lista lateral
+        const link = document.getElementById('nav-' + viewId);
+        if (link) link.classList.add('active');
+
+        // Buscar dato de sección
+        const secData = sections.find(s => s.id === viewId);
+        if (secData) {
+            dynamicSectionTitle.textContent = `🌍 ${secData.name}`;
+            dynamicSectionDesc.textContent = secData.desc || 'Casos de uso para esta sección específica.';
+        }
+
+        dashboardSection.style.display = 'none';
+        dynamicSection.style.display = 'block';
+        renderUseCases();
+    }
+}
+
+function renderSectionsMenu() {
+    sectionsList.innerHTML = '';
+    sections.forEach(sec => {
+        const li = document.createElement('li');
+        li.className = 'nav-item';
+        li.id = 'nav-' + sec.id;
+        li.innerHTML = `${sec.name} ${sec.desc ? `<span class="nav-item-desc">${sec.desc}</span>` : ''}`;
+        li.onclick = () => switchView(sec.id);
+        sectionsList.appendChild(li);
+    });
+}
+
+function updateSectionDropdowns() {
+    createSectionSelect.innerHTML = '<option value="" disabled selected>Selecciona una sección...</option>';
+    sections.forEach(sec => {
+        const opt = document.createElement('option');
+        opt.value = sec.id;
+        opt.textContent = sec.name;
+        createSectionSelect.appendChild(opt);
+    });
+}
 
 // Obtener los casos desde Firebase Firestore
 async function fetchCases() {
@@ -152,16 +250,25 @@ async function fetchCases() {
 
         if (docSnap.exists()) {
             const data = docSnap.data();
+
             if (data && Array.isArray(data.useCases)) {
                 useCases = data.useCases;
-                addLog(`FETCH Firebase Exitoso: ${useCases.length} casos encontrados.`);
             } else {
                 useCases = [];
-                addLog("Atención: El documento existe pero no tiene el formato correcto.");
             }
+
+            if (data && Array.isArray(data.sections)) {
+                sections = data.sections;
+            } else {
+                sections = [];
+            }
+
+            addLog(`FETCH Firebase Exitoso: ${useCases.length} casos, ${sections.length} secciones encontrados.`);
+
         } else {
             addLog("El documento aún no existe en Firebase. Empezaremos desde cero.", true);
             useCases = [];
+            sections = [];
         }
     } catch (error) {
         addLog(`Error Crítico de Firebase (Fetch): ${error.message}`, true);
@@ -174,10 +281,10 @@ async function fetchCases() {
 // Guardar los casos en Firebase Firestore
 async function saveCases() {
     try {
-        addLog(`Subiendo actualización a Firebase (${useCases.length} items)...`);
+        addLog(`Subiendo actualización a Firebase (${useCases.length} items, ${sections.length} secciones)...`);
 
         // setDoc sobreescribe el documento entero o lo crea si no existía
-        await setDoc(docRef, { useCases: useCases });
+        await setDoc(docRef, { useCases: useCases, sections: sections });
 
         addLog(`GUARDADO en Firebase Exitoso.`);
     } catch (error) {
@@ -202,6 +309,8 @@ btnSaveUseCase.addEventListener('click', async (e) => {
         btnSaveUseCase.disabled = true;
         btnSaveUseCase.textContent = 'Guardando...';
 
+        const selectedSectionId = createSectionSelect.value;
+
         if (editingUseCaseId) {
             // Actualizar existente
             const ucIndex = useCases.findIndex(c => c.id === editingUseCaseId);
@@ -209,6 +318,7 @@ btnSaveUseCase.addEventListener('click', async (e) => {
                 useCases[ucIndex].name = createName.value.trim();
                 useCases[ucIndex].rules = createRules.value.trim();
                 useCases[ucIndex].input = createInput.value.trim();
+                useCases[ucIndex].sectionId = selectedSectionId; // Update section
             }
             await saveCases();
             showToast('Caso de Uso actualizado exitosamente');
@@ -218,14 +328,24 @@ btnSaveUseCase.addEventListener('click', async (e) => {
                 id: Date.now().toString(),
                 name: createName.value.trim(),
                 rules: createRules.value.trim(),
-                input: createInput.value.trim()
+                input: createInput.value.trim(),
+                sectionId: selectedSectionId,
+                executeCount: 0 // New field for popularity
             };
             useCases.push(newCase);
             await saveCases();
             showToast('Caso de Uso global guardado exitosamente');
         }
 
-        renderUseCases();
+        // Si estamos en la vista de Dashboard, refrescamos populares. 
+        // Si estamos en la vista de la sección, refrescamos esa sección
+        if (currentView === 'dashboard') {
+            renderPopularCases();
+        } else {
+            // Forzar volver a renderizar la seccion actual, y si se cambió de sección, el caso simplemente desaparecerá de esta vista
+            renderUseCases();
+        }
+
         closeModal('modal-create');
 
         btnSaveUseCase.disabled = false;
@@ -298,18 +418,18 @@ function renderLocalDemos() {
 }
 
 function renderUseCases() {
-    // Limpiar grilla exceptuando el empty state
     useCasesGrid.innerHTML = '';
+    const sectionCases = useCases.filter(uc => uc.sectionId === currentView);
 
-    if (useCases.length === 0) {
+    if (sectionCases.length === 0) {
         useCasesGrid.appendChild(emptyState);
         emptyState.style.display = 'block';
-        emptyState.textContent = 'No tienes casos de uso creados todavía. La base global está vacía.';
+        emptyState.textContent = 'Esta sección no tiene casos de uso creados todavía. Empieza creando uno nuevo o moviendo uno existente aquí.';
     } else {
         emptyState.style.display = 'none';
 
         // Ordenar casos: del más reciente al más antiguo
-        [...useCases].reverse().forEach((uc) => {
+        [...sectionCases].reverse().forEach((uc) => {
             const card = document.createElement('div');
             card.className = 'usecase-card';
 
@@ -329,6 +449,43 @@ function renderUseCases() {
     }
 }
 
+function renderPopularCases() {
+    popularCasesGrid.innerHTML = '';
+
+    // Filtramos los que tengan al menos 1 ejecución (o mostramos vacio)
+    const activeCases = useCases.filter(uc => (uc.executeCount || 0) > 0);
+
+    if (activeCases.length === 0) {
+        popularCasesGrid.innerHTML = '<div class="empty-state">Una vez que ejecutes tus casos, aparecerán aquí los más populares.</div>';
+        return;
+    }
+
+    // Ordenamos por executeCount de mayor a menor y seleccionamos los primeros 5
+    const topCases = activeCases.sort((a, b) => (b.executeCount || 0) - (a.executeCount || 0)).slice(0, 5);
+
+    topCases.forEach((uc) => {
+        const card = document.createElement('div');
+        card.className = 'usecase-card';
+
+        // Find section name para mostrar subtitulo
+        const belongsTo = sections.find(s => s.id === uc.sectionId);
+        const sectionNameStr = belongsTo ? belongsTo.name : 'Misceláneos';
+
+        card.innerHTML = `
+            <div onclick="openExecuteModal('${uc.id}')" style="flex-grow: 1; cursor: pointer;">
+                <div style="font-size:0.75rem; color:#f59e0b; margin-bottom:5px; font-weight:bold;">📍 ${sectionNameStr}</div>
+                <h3 class="usecase-title">${uc.name}</h3>
+                <p class="usecase-desc">${uc.rules}</p>
+            </div>
+            <div style="margin-top:15px; display: flex; gap: 10px; align-items: center; justify-content: space-between">
+                <span class="text-muted" style="font-size:0.8rem; font-weight: 500;">👁️ Ejecutado ${uc.executeCount} veces</span>
+                <button class="btn btn-primary" style="font-size: 0.85rem;" onclick="openExecuteModal('${uc.id}')">⚡ Ejecutar</button>
+            </div>
+        `;
+        popularCasesGrid.appendChild(card);
+    });
+}
+
 window.editUseCase = (id, event) => {
     if (event) event.stopPropagation();
     const uc = useCases.find(c => c.id === id);
@@ -340,6 +497,7 @@ window.editUseCase = (id, event) => {
     createName.value = uc.name;
     createRules.value = uc.rules;
     createInput.value = uc.input || '';
+    createSectionSelect.value = uc.sectionId || '';
 
     openModal('modal-create');
 };
@@ -381,7 +539,11 @@ window.deleteUseCase = async (id, event) => {
 
         useCases = useCases.filter(uc => uc.id !== id);
         await saveCases();
-        renderUseCases();
+        if (currentView === 'dashboard') {
+            renderPopularCases();
+        } else {
+            renderUseCases();
+        }
         showToast('Caso de Uso eliminado de la base de datos.');
     }
 };
@@ -635,10 +797,20 @@ btnRunPrompt.addEventListener('click', () => {
 
     // Ejecuta la llamada REAL a la API
     executeAIApiCall(selectedModel, activeKey, finalPrompt)
-        .then(response => {
+        .then(async response => {
             loadNode.classList.remove('loading');
             logToConsole(`> ✅ [HTTP ${response.status} OK] Conexión cerrada.`, 'success');
             logToConsole(`--------------- RESULTADO DE LA API ---------------`, 'normal');
+
+            // Sumar popularidad y guardar en background
+            if (currentExecutingCase) {
+                currentExecutingCase.executeCount = (currentExecutingCase.executeCount || 0) + 1;
+                saveCases().then(() => {
+                    if (currentView === 'dashboard') {
+                        renderPopularCases();
+                    }
+                });
+            }
 
             const textData = response.data;
 
