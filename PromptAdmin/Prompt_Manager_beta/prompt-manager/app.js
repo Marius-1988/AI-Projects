@@ -776,13 +776,16 @@ btnRunPrompt.addEventListener('click', () => {
             };
         }
         else if (model === "Claude") {
-            const url = `https://api.anthropic.com/v1/messages`;
-            const body = {
-                model: "claude-3-5-sonnet-20241022",
+            let modelId = "claude-3-5-sonnet-20241022";
+            let url = `https://api.anthropic.com/v1/messages`;
+
+            let getBody = (m) => JSON.stringify({
+                model: m,
                 max_tokens: 4096,
                 messages: [{ role: "user", content: promptText }]
-            };
-            const response = await fetch(url, {
+            });
+
+            let initParams = {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -790,12 +793,53 @@ btnRunPrompt.addEventListener('click', () => {
                     "anthropic-version": "2023-06-01",
                     "anthropic-dangerous-direct-browser-access": "true" // Solo para uso de prueba local/cliente
                 },
-                body: JSON.stringify(body)
-            });
+                body: getBody(modelId)
+            };
+
+            let response = await fetch(url, initParams);
+
             if (!response.ok) {
-                const err = await response.json();
-                throw new Error(err.error?.message || "Error conectando a Anthropic");
+                const errData = await response.json();
+                const errMsg = errData.error?.message || "";
+
+                if (response.status === 404 || errMsg.toLowerCase().includes("not found")) {
+                    logToConsole(`> ⚠️ El modelo por defecto falló. Solicitando lista de modelos permitidos a Anthropic...`, 'info');
+
+                    const listResponse = await fetch(`https://api.anthropic.com/v1/models`, {
+                        headers: {
+                            "x-api-key": apiKey,
+                            "anthropic-version": "2023-06-01",
+                            "anthropic-dangerous-direct-browser-access": "true"
+                        }
+                    });
+
+                    if (listResponse.ok) {
+                        const listData = await listResponse.json();
+                        // Buscar el primer modelo claude compatible en su API (suele iniciar con claude-3)
+                        const validModel = listData.data?.find(m => m.id && m.id.includes("claude"));
+
+                        if (validModel) {
+                            modelId = validModel.id;
+                            logToConsole(`> 🔄 Reintentando conexión utilizando el modelo compatible detectado: ${modelId}`, 'info');
+                            initParams.body = getBody(modelId);
+                            response = await fetch(url, initParams);
+                        } else {
+                            throw new Error("No se detectó ningún modelo Claude válido disponible en tu API key de Anthropic.");
+                        }
+                    } else {
+                        // En caso de que no haya endpoint /v1/models (solo por seguridad futura si Anthropic lo deprecara) tiramos el error original
+                        throw new Error(errMsg || "Error Listando Modelos de Anthropic");
+                    }
+                } else {
+                    throw new Error(errMsg || "Error conectando a Anthropic");
+                }
             }
+
+            if (!response.ok) {
+                const finalErr = await response.json();
+                throw new Error(finalErr.error?.message || "Error conectando a Anthropic");
+            }
+
             const data = await response.json();
             return {
                 status: response.status,
