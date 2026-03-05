@@ -10,6 +10,7 @@
     /* Rojo */
     --bg-main: #f8fafc;
     --bg-card: #ffffff;
+    --bg-card-rgb: 255, 255, 255;
     --text-main: #0f172a;
     --text-muted: #64748b;
     --border: #e2e8f0;
@@ -545,9 +546,21 @@ h4 {
 
 /* Modificadores Dinámicos (Estado Processing) */
 .processing-state {
-    opacity: 0.5 !important;
     pointer-events: none !important;
-    transition: opacity 0.3s ease;
+    position: relative;
+}
+
+.processing-state::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(var(--bg-card-rgb, 255, 255, 255), 0.4);
+    backdrop-filter: blur(1px);
+    z-index: 5;
+    border-radius: var(--radius);
 }
 
 /* Bloques de Iteración Consola */
