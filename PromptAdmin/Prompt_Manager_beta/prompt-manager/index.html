@@ -207,142 +207,134 @@
                             </select>
                             <span class="error-text hidden" id="error-model">Debe seleccionar un modelo de IA.</span>
                         </div>
-                        <div id="model-info"
-                            style="display: none; background-color: var(--bg-main); padding: 12px; border-radius: var(--radius); margin-top: 10px; font-size: 0.85rem; color: var(--text-muted); border-left: 3px solid var(--primary);">
-                            <strong style="color: var(--primary);">Versión / Modelo:</strong> <span
-                                id="model-version"></span><br>
-                            <strong
-                                style="color: var(--primary); display: inline-block; margin-top: 5px;">Descripción:</strong>
-                            <span id="model-desc"></span>
-                        </div>
-                    </div>
 
-                    <!-- Consola / Respuesta -->
-                    <div class="exec-console">
-                        <h4>Terminal de Ejecución</h4>
-                        <div id="console-output" class="terminal">
-                            <div class="console-line text-muted">A la espera de ejecución...</div>
+                        <!-- Consola / Respuesta -->
+                        <div class="exec-console">
+                            <h4>Terminal de Ejecución</h4>
+                            <div id="console-output" class="terminal">
+                                <div class="console-line text-muted">A la espera de ejecución...</div>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-outline" onclick="closeModal('modal-execute')">Cancelar</button>
-                <button class="btn btn-success" id="btn-run-prompt">⚡ Ejecutar</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Notificación emergente -->
-    <div id="toast" class="toast hidden"></div>
-
-    <!-- Modal: Configuración de API Keys -->
-    <div id="modal-settings" class="modal hidden">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>⚙️ Configuración de Integraciones</h3>
-                <button class="btn-close" onclick="closeModal('modal-settings')">×</button>
-            </div>
-            <div class="modal-body">
-                <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:15px;">
-                    Las llaves se guardan ÚNICAMENTE de forma local en el navegador de su dispositivo para garantizar
-                    máxima seguridad y evitar fugas de información.
-                </p>
-                <form id="form-settings">
-                    <div class="form-group">
-                        <label for="key-gemini">Google Gemini API Key</label>
-                        <input type="password" id="key-gemini" placeholder="AIzaSy...">
-                    </div>
-                    <div class="form-group">
-                        <label for="key-anthropic">Anthropic API Key (Claude / Cursor)</label>
-                        <input type="password" id="key-anthropic" placeholder="sk-ant-api03...">
-                    </div>
-                    <div class="form-group">
-                        <label for="key-openai">OpenAI API Key (GPT-4o / Copilot)</label>
-                        <input type="password" id="key-openai" placeholder="sk-...">
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-outline" onclick="closeModal('modal-settings')">Cerrar</button>
-                <button class="btn btn-primary" id="btn-save-settings">Guardar Keys Localmente</button>
+                <div class="modal-footer">
+                    <button class="btn btn-outline" onclick="closeModal('modal-execute')">Cancelar</button>
+                    <button class="btn btn-success" id="btn-run-prompt">⚡ Ejecutar</button>
+                </div>
             </div>
         </div>
-    </div>
 
-    <!-- Modal: Crear Sección -->
-    <div id="modal-section" class="modal hidden">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Nueva Sección</h3>
-                <button class="btn-close" onclick="closeModal('modal-section')">×</button>
-            </div>
-            <div class="modal-body">
-                <form id="form-section">
-                    <div class="form-group">
-                        <label for="section-name">Nombre de la sección <span class="required">*</span></label>
-                        <input type="text" id="section-name" placeholder="Ej. Redacción" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="section-desc">Descripción (opcional)</label>
-                        <input type="text" id="section-desc" placeholder="Plantillas y correos de ventas">
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-outline" onclick="closeModal('modal-section')">Cancelar</button>
-                <button class="btn btn-primary" id="btn-save-section">Guardar</button>
-            </div>
-        </div>
-    </div>
+        <!-- Notificación emergente -->
+        <div id="toast" class="toast hidden"></div>
 
-    <!-- Modal: Editar Sección -->
-    <div id="modal-edit-section" class="modal hidden">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Editar Sección</h3>
-                <button class="btn-close" onclick="closeModal('modal-edit-section')">×</button>
-            </div>
-            <div class="modal-body">
-                <form id="form-edit-section">
-                    <div class="form-group">
-                        <label for="edit-section-select">Selecciona una sección a editar</label>
-                        <select id="edit-section-select" required>
-                            <option value="" disabled selected>Selecciona una sección...</option>
-                            <!-- Se inyectan las secciones con JS -->
-                        </select>
-                    </div>
-
-                    <div id="edit-section-fields" style="display: none;">
+        <!-- Modal: Configuración de API Keys -->
+        <div id="modal-settings" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>⚙️ Configuración de Integraciones</h3>
+                    <button class="btn-close" onclick="closeModal('modal-settings')">×</button>
+                </div>
+                <div class="modal-body">
+                    <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:15px;">
+                        Las llaves se guardan ÚNICAMENTE de forma local en el navegador de su dispositivo para
+                        garantizar
+                        máxima seguridad y evitar fugas de información.
+                    </p>
+                    <form id="form-settings">
                         <div class="form-group">
-                            <label for="edit-section-name">Nuevo Nombre <span class="required">*</span></label>
-                            <input type="text" id="edit-section-name" placeholder="Ej. Redacción" required>
+                            <label for="key-gemini">Google Gemini API Key</label>
+                            <input type="password" id="key-gemini" placeholder="AIzaSy...">
                         </div>
                         <div class="form-group">
-                            <label for="edit-section-desc">Nueva Descripción</label>
-                            <input type="text" id="edit-section-desc" placeholder="Plantillas y correos de ventas">
+                            <label for="key-anthropic">Anthropic API Key (Claude / Cursor)</label>
+                            <input type="password" id="key-anthropic" placeholder="sk-ant-api03...">
                         </div>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-outline" onclick="closeModal('modal-edit-section')">Cancelar</button>
-                <button class="btn btn-primary" id="btn-save-edit-section" disabled>Confirmar</button>
+                        <div class="form-group">
+                            <label for="key-openai">OpenAI API Key (GPT-4o / Copilot)</label>
+                            <input type="password" id="key-openai" placeholder="sk-...">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-outline" onclick="closeModal('modal-settings')">Cerrar</button>
+                    <button class="btn btn-primary" id="btn-save-settings">Guardar Keys Localmente</button>
+                </div>
             </div>
         </div>
-    </div>
 
-    <!-- Panel de Debugging (Oculto en Prod) -->
-    <div id="debug-panel" class="debug-panel hidden" style="display: none !important;">
-        <div class="debug-header">
-            <h4>🐛 Consola de Debug en Vivo</h4>
-            <button class="btn-close"
-                onclick="document.getElementById('debug-panel').classList.toggle('minimized')">_</button>
+        <!-- Modal: Crear Sección -->
+        <div id="modal-section" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Nueva Sección</h3>
+                    <button class="btn-close" onclick="closeModal('modal-section')">×</button>
+                </div>
+                <div class="modal-body">
+                    <form id="form-section">
+                        <div class="form-group">
+                            <label for="section-name">Nombre de la sección <span class="required">*</span></label>
+                            <input type="text" id="section-name" placeholder="Ej. Redacción" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="section-desc">Descripción (opcional)</label>
+                            <input type="text" id="section-desc" placeholder="Plantillas y correos de ventas">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-outline" onclick="closeModal('modal-section')">Cancelar</button>
+                    <button class="btn btn-primary" id="btn-save-section">Guardar</button>
+                </div>
+            </div>
         </div>
-        <div id="debug-logs" class="debug-logs"></div>
-    </div>
 
-    <script type="module" src="app.js"></script>
+        <!-- Modal: Editar Sección -->
+        <div id="modal-edit-section" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Editar Sección</h3>
+                    <button class="btn-close" onclick="closeModal('modal-edit-section')">×</button>
+                </div>
+                <div class="modal-body">
+                    <form id="form-edit-section">
+                        <div class="form-group">
+                            <label for="edit-section-select">Selecciona una sección a editar</label>
+                            <select id="edit-section-select" required>
+                                <option value="" disabled selected>Selecciona una sección...</option>
+                                <!-- Se inyectan las secciones con JS -->
+                            </select>
+                        </div>
+
+                        <div id="edit-section-fields" style="display: none;">
+                            <div class="form-group">
+                                <label for="edit-section-name">Nuevo Nombre <span class="required">*</span></label>
+                                <input type="text" id="edit-section-name" placeholder="Ej. Redacción" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="edit-section-desc">Nueva Descripción</label>
+                                <input type="text" id="edit-section-desc" placeholder="Plantillas y correos de ventas">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-outline" onclick="closeModal('modal-edit-section')">Cancelar</button>
+                    <button class="btn btn-primary" id="btn-save-edit-section" disabled>Confirmar</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Panel de Debugging (Oculto en Prod) -->
+        <div id="debug-panel" class="debug-panel hidden" style="display: none !important;">
+            <div class="debug-header">
+                <h4>🐛 Consola de Debug en Vivo</h4>
+                <button class="btn-close"
+                    onclick="document.getElementById('debug-panel').classList.toggle('minimized')">_</button>
+            </div>
+            <div id="debug-logs" class="debug-logs"></div>
+        </div>
+
+        <script type="module" src="app.js"></script>
 </body>
 
 </html>

@@ -131,10 +131,6 @@ const consoleOutput = document.getElementById('console-output');
 const errorInput = document.getElementById('error-input');
 const errorModel = document.getElementById('error-model');
 
-const modelInfoBox = document.getElementById('model-info');
-const modelVersionText = document.getElementById('model-version');
-const modelDescText = document.getElementById('model-desc');
-
 const btnEditRules = document.getElementById('btn-edit-rules');
 
 // Modal Keys
@@ -662,7 +658,6 @@ window.openExecuteModal = (id) => {
     execRules.value = uc.rules;
     execInput.value = uc.input || '';
     execModel.value = ''; // Reset modelo
-    modelInfoBox.style.display = 'none';
 
     errorInput.classList.add('hidden');
     errorModel.classList.add('hidden');
@@ -938,33 +933,6 @@ btnRunPrompt.addEventListener('click', () => {
         .finally(() => {
             btnRunPrompt.disabled = false;
         });
-});
-
-// Detalles de Modelos (Alineado con los select values)
-const modelDetails = {
-    'Gemini': {
-        version: 'Gemini 1.5 Flash',
-        desc: 'Conexión directa SSL con Google Vertex AI. Procesamiento hiperrápido.'
-    },
-    'Claude': {
-        version: 'Claude 3.5 Sonnet (Reemplazo API de Cursor)',
-        desc: 'Las IAs no devuelven "archivos de proyecto", solo bloques de código. Cópialos en tu VSCode o Cursor manualmente.'
-    },
-    'GPT4o': {
-        version: 'GPT-4o (Reemplazo API de MS Copilot)',
-        desc: 'Modelo core de OpenAI utilizado en la arquitectura interna de Microsoft Copilot.'
-    }
-};
-
-execModel.addEventListener('change', (e) => {
-    const selected = e.target.value;
-    if (modelDetails[selected]) {
-        modelVersionText.textContent = modelDetails[selected].version;
-        modelDescText.textContent = modelDetails[selected].desc;
-        modelInfoBox.style.display = 'block';
-    } else {
-        modelInfoBox.style.display = 'none';
-    }
 });
 
 // ---- Utilidades Generales ----
