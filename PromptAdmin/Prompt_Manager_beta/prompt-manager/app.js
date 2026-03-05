@@ -42,6 +42,16 @@ const dynamicSectionTitle = document.getElementById('dynamic-section-title');
 const dynamicSectionDesc = document.getElementById('dynamic-section-desc');
 const popularCasesGrid = document.getElementById('popular-cases-grid');
 
+// Punteros Editar Sección
+const btnEditSections = document.getElementById('btn-edit-sections');
+const modalEditSection = document.getElementById('modal-edit-section');
+const formEditSection = document.getElementById('form-edit-section');
+const editSectionSelect = document.getElementById('edit-section-select');
+const editSectionFields = document.getElementById('edit-section-fields');
+const editSectionName = document.getElementById('edit-section-name');
+const editSectionDesc = document.getElementById('edit-section-desc');
+const btnSaveEditSection = document.getElementById('btn-save-edit-section');
+
 // Array pre-cargado de Demos generados previamente en 3 rutas distintas (mismas que simulan 3 hostings diferentes)
 const defaultDemos = [
     {
@@ -190,6 +200,59 @@ btnSaveSection.addEventListener('click', async (e) => {
     }
 });
 
+btnEditSections.addEventListener('click', () => {
+    formEditSection.reset();
+    editSectionFields.style.display = 'none';
+    btnSaveEditSection.disabled = true;
+    openModal('modal-edit-section');
+});
+
+editSectionSelect.addEventListener('change', (e) => {
+    const secId = e.target.value;
+    const secData = sections.find(s => s.id === secId);
+    if (secData) {
+        editSectionName.value = secData.name;
+        editSectionDesc.value = secData.desc || '';
+        editSectionFields.style.display = 'block';
+        btnSaveEditSection.disabled = false;
+    }
+});
+
+btnSaveEditSection.addEventListener('click', async (e) => {
+    e.preventDefault();
+    if (formEditSection.checkValidity()) {
+        const secId = editSectionSelect.value;
+        const secIndex = sections.findIndex(s => s.id === secId);
+        if (secIndex !== -1) {
+            btnSaveEditSection.disabled = true;
+            btnSaveEditSection.textContent = 'Guardando...';
+
+            sections[secIndex].name = editSectionName.value.trim();
+            sections[secIndex].desc = editSectionDesc.value.trim();
+
+            await saveCases();
+            renderSectionsMenu();
+            updateSectionDropdowns();
+
+            // Si la vista actual es la sección que acabamos de editar, actualizamos su título
+            if (currentView === secId) {
+                dynamicSectionTitle.textContent = `🌍 ${sections[secIndex].name}`;
+                dynamicSectionDesc.textContent = sections[secIndex].desc || 'Casos de uso para esta sección específica.';
+            } else if (currentView === 'dashboard') {
+                renderPopularCases(); // Refrescar nombres de sección en cards de dashboard
+            }
+
+            closeModal('modal-edit-section');
+            showToast('Sección actualizada exitosamente');
+
+            btnSaveEditSection.disabled = false;
+            btnSaveEditSection.textContent = 'Confirmar';
+        }
+    } else {
+        formEditSection.reportValidity();
+    }
+});
+
 function switchView(viewId) {
     currentView = viewId;
 
@@ -233,11 +296,18 @@ function renderSectionsMenu() {
 
 function updateSectionDropdowns() {
     createSectionSelect.innerHTML = '<option value="" disabled selected>Selecciona una sección...</option>';
+    editSectionSelect.innerHTML = '<option value="" disabled selected>Selecciona una sección...</option>';
+
     sections.forEach(sec => {
         const opt = document.createElement('option');
         opt.value = sec.id;
         opt.textContent = sec.name;
         createSectionSelect.appendChild(opt);
+
+        const optEdit = document.createElement('option');
+        optEdit.value = sec.id;
+        optEdit.textContent = sec.name;
+        editSectionSelect.appendChild(optEdit);
     });
 }
 
