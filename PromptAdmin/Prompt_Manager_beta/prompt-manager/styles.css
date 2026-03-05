@@ -296,6 +296,7 @@ h4 {
     color: var(--text-muted);
     display: -webkit-box;
     -webkit-line-clamp: 3;
+    line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
     margin-bottom: 15px;
@@ -540,4 +541,36 @@ h4 {
     .exec-console {
         flex: 1;
     }
+}
+
+/* Modificadores Dinámicos (Estado Processing) */
+.processing-state {
+    opacity: 0.5 !important;
+    pointer-events: none !important;
+    transition: opacity 0.3s ease;
+}
+
+/* Bloques de Iteración Consola */
+.console-iteration-block {
+    margin-bottom: 8px;
+    border-bottom: 1px dotted var(--border);
+    padding-bottom: 8px;
+}
+
+.console-iteration-block summary {
+    cursor: pointer;
+    font-size: 0.85rem;
+    color: var(--primary);
+    font-weight: 500;
+    margin-bottom: 5px;
+    outline: none;
+    user-select: none;
+}
+
+.console-iteration-block summary:hover {
+    color: var(--primary-hover);
+}
+
+.console-iteration-block[open] {
+    border-bottom: 1px solid var(--primary);
 }

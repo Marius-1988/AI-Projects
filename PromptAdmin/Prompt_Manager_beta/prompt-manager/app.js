@@ -711,7 +711,10 @@ btnRunPrompt.addEventListener('click', () => {
 
     if (!isValid) return;
 
+    // BLOQUEAR INTERFAZ MIENTRAS SE PROCESA
+    modalExecute.querySelector('.modal-content').classList.add('processing-state');
     btnRunPrompt.disabled = true;
+    btnRunPrompt.textContent = '⌛ Procesando...';
 
     const selectedModel = execModel.value;
 
@@ -726,6 +729,21 @@ btnRunPrompt.addEventListener('click', () => {
         logToConsole(`> Inicializando conexión con: API de ${selectedModel}`, 'info');
         execModel.disabled = true; // Bloqueamos el selector de IA para mantener el contexto con la misma arquitectura
     } else {
+        // NUEVA LÓGICA: Minimizar los logs sueltos previos para no saturar la pantalla
+        const children = [...consoleOutput.children];
+        const looseElements = children.filter(el => el.tagName !== 'DETAILS' && (el.classList.contains('console-line') || el.style.margin === '10px 0'));
+
+        if (looseElements.length > 0) {
+            const detailsWrapper = document.createElement('details');
+            detailsWrapper.className = 'console-iteration-block';
+            const turnNumber = Math.ceil(currentMessagesHistory.length / 2);
+            detailsWrapper.innerHTML = `<summary>📜 Ver Ejecución #${turnNumber} anterior...</summary>`;
+
+            // Movemos los elementos sueltos dentro del details
+            looseElements.forEach(el => detailsWrapper.appendChild(el));
+            consoleOutput.appendChild(detailsWrapper);
+        }
+
         // Ejecución iterativa / chat
         const userInput = execInput.value;
         currentMessagesHistory.push({ role: "user", content: userInput });
@@ -996,6 +1014,8 @@ btnRunPrompt.addEventListener('click', () => {
             logToConsole(`> ❌ API Fetch Failed: ${error.message}`, 'error');
         })
         .finally(() => {
+            // DESBLOQUEAR INTERFAZ
+            modalExecute.querySelector('.modal-content').classList.remove('processing-state');
             btnRunPrompt.disabled = false;
             btnRunPrompt.textContent = '⚡ Iterar / Enviar';
             execInput.focus();
