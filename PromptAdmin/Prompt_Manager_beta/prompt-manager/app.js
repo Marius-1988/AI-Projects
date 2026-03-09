@@ -53,6 +53,12 @@ const editSectionName = document.getElementById('edit-section-name');
 const editSectionDesc = document.getElementById('edit-section-desc');
 const btnSaveEditSection = document.getElementById('btn-save-edit-section');
 
+// Punteros Sub-secciones
+const sectionSubsectionsInput = document.getElementById('section-subsections');
+const editSectionSubsectionsInput = document.getElementById('edit-section-subsections');
+const createSubsectionDropdown = document.getElementById('create-subsection');
+const groupCreateSubsection = document.getElementById('group-create-subsection');
+
 // Array pre-cargado de Demos generados previamente en 3 rutas distintas (mismas que simulan 3 hostings diferentes)
 const defaultDemos = [
     {
@@ -203,10 +209,14 @@ btnCreateSection.addEventListener('click', () => {
 btnSaveSection.addEventListener('click', async (e) => {
     e.preventDefault();
     if (formSection.checkValidity()) {
+        const SubsRaw = sectionSubsectionsInput.value.trim();
+        const subsArray = SubsRaw ? SubsRaw.split(',').map(s => s.trim()).filter(s => s) : [];
+
         const newSection = {
             id: 'sec_' + Date.now().toString(),
             name: sectionNameInput.value.trim(),
-            desc: sectionDescInput.value.trim()
+            desc: sectionDescInput.value.trim(),
+            subsections: subsArray
         };
         sections.push(newSection);
         await saveCases(); // Save synchronizes everything
@@ -232,6 +242,7 @@ editSectionSelect.addEventListener('change', (e) => {
     if (secData) {
         editSectionName.value = secData.name;
         editSectionDesc.value = secData.desc || '';
+        editSectionSubsectionsInput.value = secData.subsections ? secData.subsections.join(', ') : '';
         editSectionFields.style.display = 'block';
         btnSaveEditSection.disabled = false;
     }
@@ -248,6 +259,8 @@ btnSaveEditSection.addEventListener('click', async (e) => {
 
             sections[secIndex].name = editSectionName.value.trim();
             sections[secIndex].desc = editSectionDesc.value.trim();
+            const SubsRaw = editSectionSubsectionsInput.value.trim();
+            sections[secIndex].subsections = SubsRaw ? SubsRaw.split(',').map(s => s.trim()).filter(s => s) : [];
 
             await saveCases();
             renderSectionsMenu();
@@ -389,7 +402,29 @@ btnCreatePrompt.addEventListener('click', () => {
     formCreate.reset();
     editingUseCaseId = null;
     if (modalCreateTitle) modalCreateTitle.textContent = 'Nuevo Caso de Uso';
+    // reset select dropdown
+    groupCreateSubsection.style.display = 'none';
     openModal('modal-create');
+});
+
+createSectionSelect.addEventListener('change', (e) => {
+    const secId = e.target.value;
+    const secData = sections.find(s => s.id === secId);
+
+    // update subsections dropdown
+    createSubsectionDropdown.innerHTML = '<option value="" disabled selected>Selecciona una sub-sección...</option>';
+    if (secData && secData.subsections && secData.subsections.length > 0) {
+        groupCreateSubsection.style.display = 'block';
+        secData.subsections.forEach(sub => {
+            const opt = document.createElement('option');
+            opt.value = sub;
+            opt.textContent = sub;
+            createSubsectionDropdown.appendChild(opt);
+        });
+    } else {
+        groupCreateSubsection.style.display = 'none';
+        createSubsectionDropdown.innerHTML = '';
+    }
 });
 
 btnSaveUseCase.addEventListener('click', async (e) => {
@@ -400,6 +435,14 @@ btnSaveUseCase.addEventListener('click', async (e) => {
 
         const selectedSectionId = createSectionSelect.value;
 
+        let selectedSub = createSubsectionDropdown.value || null;
+        if (!selectedSub && createSubsectionDropdown.options.length > 1) {
+            selectedSub = createSubsectionDropdown.options[1].value;
+        }
+        if (createSubsectionDropdown.options.length === 0) {
+            selectedSub = null;
+        }
+
         if (editingUseCaseId) {
             // Actualizar existente
             const ucIndex = useCases.findIndex(c => c.id === editingUseCaseId);
@@ -408,6 +451,7 @@ btnSaveUseCase.addEventListener('click', async (e) => {
                 useCases[ucIndex].rules = createRules.value.trim();
                 useCases[ucIndex].input = createInput.value.trim();
                 useCases[ucIndex].sectionId = selectedSectionId; // Update section
+                useCases[ucIndex].subsection = selectedSub;
             }
             await saveCases();
             showToast('Caso de Uso actualizado exitosamente');
@@ -419,6 +463,7 @@ btnSaveUseCase.addEventListener('click', async (e) => {
                 rules: createRules.value.trim(),
                 input: createInput.value.trim(),
                 sectionId: selectedSectionId,
+                subsection: selectedSub,
                 executeCount: 0 // New field for popularity
             };
             useCases.push(newCase);
@@ -495,10 +540,10 @@ function renderLocalDemos() {
                     <h3 class="usecase-title">${demo.name}</h3>
                     ${demo.desc ? `<p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:10px;">${demo.desc}</p>` : ''}
                 </div>
-                <div style="margin-top:15px; display: flex; gap: 10px; align-items: center;">
-                    <a href="${demo.path}" class="btn btn-primary" style="flex-grow: 1; font-size: 0.85rem; text-decoration: none; text-align:center;" title="Abrir Demo">🔗 Ver App</a>
-                    <a href="${demo.url}" target="_blank" class="btn btn-outline" style="border-color: #64748b; color: #64748b; font-size: 0.85rem; text-decoration: none; text-align:center;" title="Ver en GitHub">GitHub</a>
-                    <button class="btn btn-outline" style="border-color: #f59e0b; color: #f59e0b; padding: 10px;" onclick="deleteLocalDemo('${demo.id}', event)" title="Ocultar de mi PC">🗑️</button>
+                <div style="margin-top:15px; display: flex; gap: 8px; align-items: center; white-space: nowrap;">
+                    <a href="${demo.path}" class="btn btn-primary" style="flex-grow: 1; font-size: 0.85rem; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 5px;" title="Abrir Demo">🔗 Ver App</a>
+                    <a href="${demo.url}" target="_blank" class="btn btn-outline" style="border-color: #64748b; color: #64748b; font-size: 0.85rem; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 5px;" title="Ver en GitHub">GitHub</a>
+                    <button class="btn btn-outline" style="border-color: #f59e0b; color: #f59e0b; padding: 10px; display: flex; align-items: center; justify-content: center;" onclick="deleteLocalDemo('${demo.id}', event)" title="Ocultar de mi PC">🗑️</button>
                 </div>
             `;
             demosGrid.appendChild(card);
@@ -517,23 +562,60 @@ function renderUseCases() {
     } else {
         emptyState.style.display = 'none';
 
-        // Ordenar casos: del más reciente al más antiguo
-        [...sectionCases].reverse().forEach((uc) => {
-            const card = document.createElement('div');
-            card.className = 'usecase-card';
+        const secData = sections.find(s => s.id === currentView);
+        let groups = {};
 
-            card.innerHTML = `
-                <div onclick="openExecuteModal('${uc.id}')" style="flex-grow: 1; cursor: pointer;">
-                    <h3 class="usecase-title">${uc.name}</h3>
-                    <p class="usecase-desc">${uc.rules}</p>
-                </div>
-                <div style="margin-top:15px; display: flex; gap: 10px; align-items: center;">
-                    <button class="btn btn-primary" style="flex-grow: 1; font-size: 0.85rem;" onclick="openExecuteModal('${uc.id}')">⚡ Ejecutar</button>
-                    <button class="btn btn-outline" style="border-color: #10b981; color: #10b981; padding: 10px;" onclick="copyUseCase('${uc.id}', event)" title="Copiar Prompt">📋</button>
-                    <button class="btn btn-outline" style="border-color: #ef4444; color: #ef4444; padding: 10px;" onclick="deleteUseCase('${uc.id}', event)" title="Eliminar Caso">🗑️</button>
-                </div>
+        // Grouping
+        sectionCases.forEach(uc => {
+            const sub = uc.subsection || 'General';
+            if (!groups[sub]) groups[sub] = [];
+            groups[sub].push(uc);
+        });
+
+        // Determine ordered sub-sections
+        const orderedSubs = (secData && secData.subsections) ? [...secData.subsections] : [];
+        const finalGroups = [];
+
+        orderedSubs.forEach(sub => {
+            if (groups[sub] && groups[sub].length > 0) {
+                finalGroups.push({ name: sub, cases: groups[sub] });
+                delete groups[sub];
+            }
+        });
+
+        // Add remaining groups
+        for (let sub in groups) {
+            finalGroups.push({ name: sub, cases: groups[sub] });
+        }
+
+        finalGroups.forEach((group, index) => {
+            // Divider + Subtitle
+            const header = document.createElement('div');
+            header.style.gridColumn = '1 / -1';
+            header.innerHTML = `
+                ${index > 0 ? '<hr style="border:0; border-top:1px solid var(--border); margin:15px 0 25px;">' : ''}
+                <h3 style="color:var(--text-main); font-size:1.1rem; margin-bottom: 10px;">📂 ${group.name}</h3>
             `;
-            useCasesGrid.appendChild(card);
+            useCasesGrid.appendChild(header);
+
+            // Cards
+            [...group.cases].reverse().forEach(uc => {
+                const card = document.createElement('div');
+                card.className = 'usecase-card';
+
+                card.innerHTML = `
+                    <div onclick="openExecuteModal('${uc.id}')" style="flex-grow: 1; cursor: pointer;">
+                        <h3 class="usecase-title">${uc.name}</h3>
+                        <p class="usecase-desc">${uc.rules}</p>
+                    </div>
+                    <div style="margin-top:15px; display: flex; gap: 8px; align-items: center; white-space: nowrap;">
+                        <button class="btn btn-primary" style="flex-grow: 1; font-size: 0.85rem; display: flex; align-items: center; justify-content: center; gap: 5px;" onclick="openExecuteModal('${uc.id}')">⚡ Ejecutar</button>
+                        <button class="btn btn-outline" style="border-color: #10b981; color: #10b981; padding: 10px; display: flex; align-items: center; justify-content: center;" onclick="copyUseCase('${uc.id}', event)" title="Copiar Prompt">📋</button>
+                        <button class="btn btn-outline" style="border-color: #ef4444; color: #ef4444; padding: 10px; display: flex; align-items: center; justify-content: center;" onclick="deleteUseCase('${uc.id}', event)" title="Eliminar Caso">🗑️</button>
+                    </div>
+                `;
+                useCasesGrid.appendChild(card);
+            });
         });
     }
 }
@@ -568,7 +650,7 @@ function renderPopularCases() {
             </div>
             <div style="margin-top:15px; display: flex; gap: 10px; align-items: center; justify-content: space-between">
                 <span class="text-muted" style="font-size:0.8rem; font-weight: 500;">👁️ Ejecutado ${uc.executeCount} veces</span>
-                <button class="btn btn-primary" style="font-size: 0.85rem;" onclick="openExecuteModal('${uc.id}')">⚡ Ejecutar</button>
+                <button class="btn btn-primary" style="font-size: 0.85rem; display: flex; align-items: center; justify-content: center; gap: 5px;" onclick="openExecuteModal('${uc.id}')">⚡ Ejecutar</button>
             </div>
         `;
         popularCasesGrid.appendChild(card);
@@ -587,6 +669,11 @@ window.editUseCase = (id, event) => {
     createRules.value = uc.rules;
     createInput.value = uc.input || '';
     createSectionSelect.value = uc.sectionId || '';
+
+    createSectionSelect.dispatchEvent(new Event('change'));
+    if (uc.subsection) {
+        createSubsectionDropdown.value = uc.subsection;
+    }
 
     openModal('modal-create');
 };
