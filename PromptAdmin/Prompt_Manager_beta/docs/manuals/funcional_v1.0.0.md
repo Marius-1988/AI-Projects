@@ -94,9 +94,53 @@ Feature: Categorización Dinámica Discreta de Casos de Uso
     And, subsecuentemente, al crear un nuevo Caso de Uso seleccionando "Operaciones", un dropdown nuevo aparecerá desplegando exclusivamente "Logística" e "Inventario" como opciones de anidamiento secundario.
 ```
 
-### Epic 2: Motor de Ejecución Contextual Generativo
+**US 1.2: Como** Prompt Engineer, **quiero** poder crear un nuevo Caso de Uso centralizado **para** preservar instrucciones del sistema que utilizo recurrentemente.
+```gherkin
+Feature: Creación Estandarizada de Caso de Uso
+  
+  Scenario: Creación de un prompt base con guardado global en la nube
+    Given que el usuario hizo clic en el botón primario "+ Crear Caso de Uso"
+    And el modal "Nuevo Caso de Uso" se encuentra visible en primer plano
+    When el usuario ingresa "Traducción Técnica" en el campo "Nombre"
+    And selecciona una Sección válida del dropdown obligatorio
+    And rellena el campo "Reglas generales del prompt" con un contexto inicial
+    And presiona el botón "Guardar"
+    Then el sistema bloquea momentáneamente el botón previniendo duplicidades cruzadas (debouncing visual)
+    And el servidor Cloud sincroniza exitosamente el nuevo registro
+    And el modal se cierra desplegando un toast de éxito afirmando "Caso de Uso global guardado exitosamente"
+    And la vista o sección actual se vuelve a renderizar incluyendo la nueva tarjeta descriptiva.
+```
 
-**US 2.1: Como** Ingeniero Prompt interrumpiendo un Workflow, **quiero** poder refutar o corregir las salidas del Modelo de Lenguaje sosteniendo en memoria la conversación y las respuestas anteriores **para** construir código o texto evolutivo y guiado orgánicamente.
+**US 1.3: Como** usuario administrador de mis templates, **quiero** poder editar las definiciones de un Caso de Uso existente **para** evolucionar el comportamiento del LLM en el tiempo sin tener que borrar y crear un registro nuevo.
+```gherkin
+Feature: Modificación Estructural de Caso de Uso
+  
+  Scenario: Edición de campos y re-asignación de subsección
+    Given que un Caso de Uso activo se despliega en tarjetas o popups de ejecución
+    When el usuario hace clic en el disparador interno ✏️ (botón de edición) referente al prompt
+    Then se desplegará el modal mutante con el encabezado sobreescrito a "Editar Caso de Uso"
+    And los input elements de Nombre, Reglas e Input estarán proactivamente llenos (pre-fill) con los datos guardados de ese Caso.
+    And si el usuario modifica el contexto y le da a Guardar, el sistema muta el registro pre-existente sin alterar la primary key.
+```
+
+### Epic 2: Seguridad y Configuración de Infraestructura
+
+**US 2.1: Como** individuo responsable de seguridad de datos, **quiero** ingresar tokens (API Keys) privativas **para** autorizar llamadas al modelo IA sin que mis llaves se suban, graben, o vulneren mediante la red de backend público de Prompt Manager.
+```gherkin
+Feature: Bóveda de Secretos en Local Storage (Client-Side Encryption)
+  
+  Scenario: Configuración de tokens hacia LLMs Cloud
+    Given que el usuario abre el modal "Configuración de Integraciones" mediante el ícono de engranaje (⚙️)
+    When el usuario tipea el string "sk-ant-test1234..." en el input de Anthropic API Key
+    And oprime el botón mandatorio de acción "Guardar Keys Localmente"
+    Then el modelo DOM intercepta el evento cancelando la redirección estándar (preventDefault)
+    And ejecuta llamadas exclusivas a la API del navegador Window.localStorage.setItem() 
+    And la clave ingresada nunca resulta transportada visiblemente por payloads de internet, persistiendo pasivamente hasta ser invocada en runtime.
+```
+
+### Epic 3: Motor de Ejecución Contextual Generativo
+
+**US 3.1: Como** Ingeniero Prompt interrumpiendo un Workflow, **quiero** poder refutar o corregir las salidas del Modelo de Lenguaje sosteniendo en memoria la conversación y las respuestas anteriores **para** construir código o texto evolutivo y guiado orgánicamente.
 ```gherkin
 Feature: Motor de Chat Loop y Memoria Contextual Subyacente
   
