@@ -1,4 +1,4 @@
-# Changelog - Update Final v1.0.0 (Hoy)
+# Changelog - Update Final v1.0.0 - 9 de Marzo, 2026
 
 Listado de cambios técnicos y funcionales realizados en la última sesión de desarrollo previo al cierre de la versión 1.0.0:
 
