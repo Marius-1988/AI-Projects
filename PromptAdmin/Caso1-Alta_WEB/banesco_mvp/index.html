@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BANESCO QuickSight POC</title>
+    <!-- Modern Typeface -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* BANESCO Colors and Scale */
+            --primary: #00604B; /* Banesco Green */
+            --primary-hover: #004C3B;
+            --secondary: #008767;
+            --accent: #E11C23; /* Banesco Red Alert/Accent */
+            
+            --bg-body: #F4F7F6;
+            --bg-surface: #FFFFFF;
+            --bg-sidebar: #002D23;
+            
+            --text-heading: #111827;
+            --text-main: #374151;
+            --text-muted: #6B7280;
+            --text-inverse: #FFFFFF;
+            
+            --border-color: #E5E7EB;
+            --border-hover: #D1D5DB;
+            
+            --error: #EF4444;
+            --success: #10B981;
+            --warning: #F59E0B;
+
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            
+            --radius-md: 0.5rem;
+            --radius-lg: 1rem;
+            --radius-full: 9999px;
+
+            --font-family: 'Inter', sans-serif;
+            --header-h: 64px;
+            --sidebar-w: 260px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            overflow-x: hidden;
+            line-height: 1.5;
+        }
+
+        button {
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        input, select {
+            font-family: inherit;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .hidden { display: none !important; }
+        
+        /* Utility */
+        .flex { display: flex; }
+        .flex-col { flex-direction: column; }
+        .items-center { align-items: center; }
+        .justify-center { justify-content: center; }
+        .justify-between { justify-content: space-between; }
+        .gap-2 { gap: 0.5rem; }
+        .gap-4 { gap: 1rem; }
+        .p-4 { padding: 1rem; }
+        .p-6 { padding: 1.5rem; }
+        .p-8 { padding: 2rem; }
+        .w-full { width: 100%; }
+        .h-full { height: 100%; }
+
+        /* Typography */
+        h1, h2, h3, h4 { color: var(--text-heading); font-weight: 600; }
+        .text-sm { font-size: 0.875rem; }
+        .text-lg { font-size: 1.125rem; }
+        .text-2xl { font-size: 1.5rem; }
+        .font-semibold { font-weight: 600; }
+        .text-muted { color: var(--text-muted); }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: var(--radius-full); }
+        ::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .animate-fade-in {
+            animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        /* Forms & Buttons */
+        .input-group { margin-bottom: 1.25rem; position: relative; }
+        .input-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-main);
+        }
+        .input-group input, .input-group select {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            background: var(--bg-surface);
+            transition: all 0.2s;
+            color: var(--text-heading);
+            font-size: 0.875rem;
+        }
+        .input-group input:focus, .input-group select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(0, 96, 75, 0.1);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.75rem 1.5rem;
+            border-radius: var(--radius-md);
+            font-weight: 500;
+            transition: all 0.2s;
+            border: none;
+            font-size: 0.875rem;
+        }
+        .btn-primary {
+            background-color: var(--primary);
+            color: var(--text-inverse);
+            box-shadow: var(--shadow-sm);
+        }
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+        .btn-primary:active { transform: translateY(0); }
+        
+        .btn-outline {
+            background-color: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+        }
+        .btn-outline:hover {
+            background-color: var(--bg-body);
+            border-color: var(--border-hover);
+        }
+
+        /* --- LOGIN VIEW --- */
+        #login-view {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #002D23 0%, var(--primary) 100%);
+            position: relative;
+        }
+        
+        /* Subtle Background pattern */
+        .login-bg-shape {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 50%;
+            filter: blur(40px);
+        }
+
+        .login-card {
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(10px);
+            padding: 3rem;
+            border-radius: var(--radius-lg);
+            width: 100%;
+            max-width: 440px;
+            box-shadow: var(--shadow-lg);
+            position: relative;
+            z-index: 10;
+        }
+        .login-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .login-logo {
+            color: var(--primary);
+            font-size: 2rem;
+            font-weight: 700;
+            letter-spacing: -1px;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        .login-logo svg {
+            width: 32px;
+            height: 32px;
+            fill: currentColor;
+        }
+
+        .error-msg {
+            color: var(--error);
+            font-size: 0.875rem;
+            margin-top: -0.5rem;
+            margin-bottom: 1rem;
+            display: none;
+            padding: 0.75rem;
+            background: rgba(239, 68, 68, 0.1);
+            border-radius: var(--radius-md);
+            border-left: 4px solid var(--error);
+        }
+
+        /* --- MAIN APP LAYOUT --- */
+        #app-view {
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: var(--sidebar-w);
+            background-color: var(--bg-sidebar);
+            color: var(--text-inverse);
+            display: flex;
+            flex-direction: column;
+            transition: all 0.3s ease;
+            box-shadow: 4px 0 10px rgba(0,0,0,0.1);
+            z-index: 20;
+        }
+
+        .sidebar-header {
+            height: var(--header-h);
+            display: flex;
+            align-items: center;
+            padding: 0 1.5rem;
+            font-weight: 700;
+            font-size: 1.25rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            letter-spacing: -0.5px;
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            padding: 1.5rem 0;
+            overflow-y: auto;
+        }
+
+        .nav-item {
+            padding: 0.75rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            color: rgba(255,255,255,0.7);
+            transition: all 0.2s;
+            cursor: pointer;
+            border-left: 3px solid transparent;
+        }
+        
+        .nav-item svg { width: 20px; height: 20px; opacity: 0.8; }
+
+        .nav-item:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .nav-item.active {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.08);
+            border-left-color: var(--success);
+            font-weight: 500;
+        }
+        .nav-item.active svg { opacity: 1; color: var(--success); }
+
+        .sidebar-footer {
+            padding: 1rem 1.5rem;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-size: 0.875rem;
+        }
+        
+        .avatar {
+            width: 36px; height: 36px;
+            border-radius: var(--radius-full);
+            background: var(--primary);
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 600; color: #fff;
+            border: 2px solid rgba(255,255,255,0.2);
+        }
+
+        .logout-btn {
+            background: transparent; border: none; color: rgba(255,255,255,0.6);
+            cursor: pointer; padding: 0.25rem; transition: color 0.2s;
+            margin-left: auto;
+        }
+        .logout-btn:hover { color: var(--error); }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            background: #F8FAFC;
+        }
+
+        .topbar {
+            height: var(--header-h);
+            background: var(--bg-surface);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 2rem;
+            box-shadow: var(--shadow-sm);
+            z-index: 10;
+        }
+        
+        /* Views Container */
+        .content-area {
+            flex: 1;
+            padding: 2rem;
+            overflow-y: auto;
+        }
+
+        /* --- DASHBOARD / HOME VIEW --- */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .kpi-card {
+            background: var(--bg-surface);
+            padding: 1.5rem;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border-color);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .kpi-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+        .kpi-title { font-size: 0.875rem; color: var(--text-muted); font-weight: 500; margin-bottom: 0.5rem; }
+        .kpi-value { font-size: 1.875rem; font-weight: 700; color: var(--text-heading); }
+        .kpi-trend { font-size: 0.875rem; display: flex; align-items: center; gap: 0.25rem; margin-top: 0.5rem; }
+        .trend-up { color: var(--success); }
+        .trend-down { color: var(--error); }
+
+        .widgets-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 1.5rem;
+        }
+        .widget {
+            background: var(--bg-surface);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-color);
+            padding: 1.5rem;
+            box-shadow: var(--shadow-sm);
+        }
+        .widget-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+        
+        .mock-chart {
+            height: 250px;
+            width: 100%;
+            background: linear-gradient(180deg, rgba(0, 96, 75, 0.05) 0%, rgba(255, 255, 255, 0) 100%);
+            border: 1px dashed var(--border-hover);
+            border-radius: var(--radius-md);
+            display: flex; align-items: center; justify-content: center;
+            color: var(--text-muted); font-size: 0.875rem;
+            position: relative;
+            overflow: hidden;
+        }
+        .mock-chart::after {
+            content: ''; position: absolute; bottom: 0; left: 0; right: 0;
+            height: 60%;
+            background-image: url('data:image/svg+xml;utf8,<svg width="100" height="40" viewBox="0 0 100 40" xmlns="http://www.w3.org/2000/svg"><path d="M0 40 Q 25 10 50 20 T 100 0 L 100 40 Z" fill="%2300604B" opacity="0.1"/></svg>');
+            background-size: cover;
+            background-repeat: no-repeat;
+        }
+
+        .report-list { list-style: none; }
+        .report-list-item {
+            padding: 1rem; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: background 0.2s;
+        }
+        .report-list-item:hover { background: var(--bg-body); }
+        .report-list-item:last-child { border-bottom: none; }
+        .rl-title { font-weight: 500; color: var(--text-heading); font-size: 0.875rem;}
+        .rl-meta { font-size: 0.75rem; color: var(--text-muted); }
+
+        /* --- CREATE REPORT VIEW --- */
+        .report-builder {
+            display: grid; grid-template-columns: 280px 1fr; gap: 2rem; align-items: start;
+        }
+        .rb-sidebar {
+            background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 1.5rem; box-shadow: var(--shadow-sm);
+        }
+        .column-group { margin-bottom: 1.5rem; }
+        .column-group-title { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); font-weight: 600; margin-bottom: 0.75rem; }
+        .checkbox-wrapper { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; cursor: pointer; }
+        .checkbox-wrapper input { width: 16px; height: 16px; accent-color: var(--primary); cursor: pointer; }
+        .checkbox-wrapper label { font-size: 0.875rem; color: var(--text-main); cursor: pointer; user-select: none; }
+        
+        .rb-preview {
+            background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 1.5rem; box-shadow: var(--shadow-sm); min-height: 400px;
+        }
+        .preview-header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 1rem; border-bottom: 1px solid var(--border-color); margin-bottom: 1rem;}
+        
+        .tag-list { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+        .tag { background: #E2E8F0; color: #334155; font-size: 0.75rem; padding: 0.25rem 0.75rem; border-radius: var(--radius-full); display: inline-flex; align-items: center; gap: 0.25rem; border: 1px solid #CBD5E1; }
+        .tag .remove { cursor: pointer; opacity: 0.6; }
+        .tag .remove:hover { opacity: 1; color: var(--error); }
+
+        /* --- AUTH REPORT VIEW (TABLE) --- */
+        .data-table-container {
+            background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-sm);
+        }
+        .table-toolbar { display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.5rem; border-bottom: 1px solid var(--border-color); background: #FAFAFA; }
+        
+        .table-search input { padding: 0.5rem 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-color); font-size: 0.875rem; min-width: 250px;}
+        .table-search input:focus { outline: none; border-color: var(--primary); }
+
+        table { width: 100%; border-collapse: collapse; text-align: left; }
+        th { background: #F8FAFC; color: var(--text-muted); font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; padding: 1rem 1.5rem; border-bottom: 1px solid var(--border-color); white-space: nowrap; }
+        td { padding: 1rem 1.5rem; font-size: 0.875rem; border-bottom: 1px solid var(--border-color); color: var(--text-main); white-space: nowrap; }
+        tr:hover td { background: #F1F5F9; }
+        
+        .badge { padding: 0.25rem 0.5rem; border-radius: var(--radius-full); font-size: 0.75rem; font-weight: 500; }
+        .badge-auth { background: #D1FAE5; color: #065F46; }
+        .badge-rej { background: #FEE2E2; color: #991B1B; }
+        .badge-type-compra { background: #E0E7FF; color: #3730A3; }
+        .badge-type-anul { background: #FFFBEB; color: #B45309; }
+
+        .pagination { padding: 1rem 1.5rem; display: flex; justify-content: space-between; align-items: center; font-size: 0.875rem; color: var(--text-muted); }
+
+        /* Generic Header Component */
+        .page-header { margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: flex-end;}
+        .page-title { font-size: 1.5rem; color: var(--text-heading); margin-bottom: 0.25rem;}
+        .page-description { color: var(--text-muted); font-size: 0.875rem; }
+
+        /* Notification Toast */
+        #toast {
+            position: fixed; bottom: 20px; right: 20px;
+            background: #111827; color: white; padding: 1rem 1.5rem;
+            border-radius: var(--radius-md); box-shadow: var(--shadow-lg);
+            display: flex; align-items: center; gap: 0.75rem;
+            transform: translateY(100px); opacity: 0; transition: all 0.3s;
+            z-index: 1000;
+        }
+        #toast.show { transform: translateY(0); opacity: 1; }
+        
+        /* Empty state */
+        .empty-state {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            padding: 4rem 2rem; text-align: center; color: var(--text-muted);
+        }
+        .empty-state svg { width: 48px; height: 48px; color: #CBD5E1; margin-bottom: 1rem; }
+    </style>
+</head>
+<body>
+
+    <!-- LOGIN VIEW -->
+    <div id="login-view">
+        <div class="login-bg-shape" style="width: 400px; height: 400px; top: -100px; left: -100px;"></div>
+        <div class="login-bg-shape" style="width: 600px; height: 600px; bottom: -200px; right: -200px; background: rgba(0, 135, 103, 0.1);"></div>
+        
+        <div class="login-card animate-fade-in">
+            <div class="login-header">
+                <div class="login-logo">
+                    <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14.5v-9l6 4.5-6 4.5z"/></svg>
+                    Banesco
+                </div>
+                <h2 style="font-size: 1.25rem; font-weight: 500; margin-top: 0.5rem;">Gestor Analítico POS</h2>
+                <p class="text-sm text-muted" style="margin-top: 0.25rem;">Bienvenido, inicia sesión para continuar</p>
+            </div>
+
+            <div id="login-error" class="error-msg">Credenciales incorrectas. Para la demostración, usa cualquier usuario y contraseña no vacíos.</div>
+
+            <form id="login-form">
+                <div class="input-group">
+                    <label for="username">Usuario corporativo</label>
+                    <input type="text" id="username" placeholder="usuario@banesco.com" value="admin@banesco.com">
+                </div>
+                <div class="input-group">
+                    <label for="password">Contraseña</label>
+                    <input type="password" id="password" placeholder="••••••••" value="demo123">
+                </div>
+                <button type="submit" class="btn btn-primary w-full" style="margin-top: 1rem; height: 44px; font-size: 1rem;">Ingresar al Dashboard</button>
+            </form>
+            <p class="text-sm text-muted text-center" style="margin-top: 1.5rem;">POC Versión 1.0 • Entorno Demo Mockeado</p>
+        </div>
+    </div>
+
+    <!-- APP VIEW -->
+    <div id="app-view" class="hidden">
+        
+        <!-- SIDEBAR -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <svg viewBox="0 0 24 24" style="width: 24px; height: 24px; fill: var(--success); margin-right: 8px;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14.5v-9l6 4.5-6 4.5z"/></svg>
+                QuickSight UI
+            </div>
+            <nav class="sidebar-nav">
+                <div class="nav-item active" data-target="home-view">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+                    Resumen KPIs
+                </div>
+                <div class="nav-item" data-target="create-report-view">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                    Creador de Reportes
+                </div>
+                <div class="nav-item" data-target="auth-report-view">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    Aut. Transacciones
+                </div>
+                <div style="margin: 1.5rem 1.5rem 0.5rem; font-size: 0.75rem; text-transform: uppercase; color: rgba(255,255,255,0.4); font-weight: 600;">Infraestructura</div>
+                <div class="nav-item" onclick="showToast('Módulo en construcción')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10"></path></svg>
+                    Maestros Data
+                </div>
+                <div class="nav-item" onclick="showToast('Módulo en construcción')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                    Configuración
+                </div>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="avatar">AD</div>
+                <div>
+                    <div style="font-weight: 600; color: #fff;">Admin</div>
+                    <div style="font-size: 0.75rem; color: rgba(255,255,255,0.6);">POS Analytics</div>
+                </div>
+                <button class="logout-btn" onclick="logout()" title="Cerrar sesión">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                </button>
+            </div>
+        </aside>
+
+        <!-- MAIN LAYOUT -->
+        <main class="main-content">
+            <header class="topbar">
+                <div style="font-weight: 500; color: var(--text-muted);">
+                    Banesco <span style="margin: 0 0.5rem; color: var(--border-color);">/</span> Dashboard <span id="breadcrumb-current" style="margin: 0 0.5rem; color: var(--text-heading);">Resumen</span>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div style="position: relative;">
+                        <input type="text" placeholder="Buscar reportes..." style="padding: 0.5rem 1rem 0.5rem 2.5rem; border: 1px solid var(--border-color); border-radius: var(--radius-full); font-size: 0.875rem; width: 250px; background: var(--bg-body);">
+                        <svg viewBox="0 0 24 24" style="width: 16px; height: 16px; position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted);" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    </div>
+                    <button style="border:none; background:transparent; position:relative; color: var(--text-muted); padding: 0.25rem;">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+                        <span style="position: absolute; top: 0; right: 0; width: 8px; height: 8px; background: var(--error); border-radius: 50%;"></span>
+                    </button>
+                </div>
+            </header>
+
+            <div class="content-area">
+                
+                <!-- VIEW 1: HOME/DASHBOARD -->
+                <div id="home-view" class="view-content animate-fade-in">
+                    <div class="page-header">
+                        <div>
+                            <h1 class="page-title">Métricas de Adquirencia POS</h1>
+                            <p class="page-description">Resumen en tiempo real del procesamiento de pagos de comercios.</p>
+                        </div>
+                        <button class="btn btn-outline" onclick="showToast('Actualizando datos...')">
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 8px;"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                            Sincronizar
+                        </button>
+                    </div>
+
+                    <div class="kpi-grid">
+                        <div class="kpi-card">
+                            <div class="kpi-title">Volumen Procesado (Hoy)</div>
+                            <div class="kpi-value">Bs 4.2M</div>
+                            <div class="kpi-trend trend-up">
+                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 10l7-7m0 0l7 7m-7-7v18"></path></svg>
+                                12.5% vs ayer
+                            </div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-title">Tasa de Aprobación</div>
+                            <div class="kpi-value">94.2%</div>
+                            <div class="kpi-trend trend-up">
+                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 10l7-7m0 0l7 7m-7-7v18"></path></svg>
+                                0.8%
+                            </div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-title">Tx Rechazadas</div>
+                            <div class="kpi-value">1,240</div>
+                            <div class="kpi-trend trend-down">
+                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg>
+                                3.2% (Mejora)
+                            </div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-title">Terminales Activos</div>
+                            <div class="kpi-value">15,842</div>
+                            <div class="kpi-trend trend-up" style="color: var(--text-muted)">
+                                <span>~ Estable</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="widgets-grid">
+                        <div class="widget">
+                            <div class="widget-header">
+                                <h3 class="font-semibold text-lg">Evolución de Transacciones (AWS QuickSight Mock)</h3>
+                                <select style="padding: 0.25rem 0.5rem; border-radius: var(--radius-md); border: 1px solid var(--border-color); font-size: 0.875rem;">
+                                    <option>Últimos 7 días</option>
+                                    <option>Este mes</option>
+                                </select>
+                            </div>
+                            <div class="mock-chart">
+                                [Renderizado de Gráfico de Líneas AWS QuickSight de Flujo Transaccional]
+                            </div>
+                        </div>
+                        
+                        <div class="widget">
+                            <div class="widget-header">
+                                <h3 class="font-semibold text-lg">Reportes Frecuentes</h3>
+                            </div>
+                            <ul class="report-list">
+                                <li class="report-list-item" onclick="switchView('auth-report-view')">
+                                    <div>
+                                        <div class="rl-title">Reporte de autorización de transacciones</div>
+                                        <div class="rl-meta">Generado hace 10 min</div>
+                                    </div>
+                                    <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" fill="none" stroke-width="2"><path d="M9 5l7 7-7 7"></path></svg>
+                                </li>
+                                <li class="report-list-item">
+                                    <div>
+                                        <div class="rl-title">Liquidación a comercios matriz</div>
+                                        <div class="rl-meta">Generado ayer</div>
+                                    </div>
+                                    <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" fill="none" stroke-width="2"><path d="M9 5l7 7-7 7"></path></svg>
+                                </li>
+                                <li class="report-list-item">
+                                    <div>
+                                        <div class="rl-title">Cierre contable POS</div>
+                                        <div class="rl-meta">Automático diario</div>
+                                    </div>
+                                    <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" fill="none" stroke-width="2"><path d="M9 5l7 7-7 7"></path></svg>
+                                </li>
+                            </ul>
+                            <button class="btn btn-outline w-full" style="margin-top: 1rem;" onclick="switchView('create-report-view')">
+                                Crear Nuevo Reporte
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VIEW 2: CREATE REPORT -->
+                <div id="create-report-view" class="view-content hidden animate-fade-in">
+                    <div class="page-header">
+                        <div>
+                            <h1 class="page-title">Motor de Creación de Reportes</h1>
+                            <p class="page-description">Diseña analíticas a medida cruzando data de transacciones, comercios y usuarios.</p>
+                        </div>
+                        <div class="flex gap-2">
+                            <button class="btn btn-outline" onclick="resetBuilder()">Limpiar</button>
+                            <button class="btn btn-primary" onclick="showToast('Generando dataset en AWS QuickSight...')">Generar Reporte Analítico</button>
+                        </div>
+                    </div>
+
+                    <div class="report-builder">
+                        <!-- Builder Sidebar -->
+                        <div class="rb-sidebar">
+                            <h3 class="font-semibold mb-4" style="margin-bottom: 1rem;">Maestros de Datos</h3>
+                            
+                            <div class="column-group">
+                                <div class="column-group-title">Aut. de Compras</div>
+                                <div class="checkbox-wrapper"><input type="checkbox" id="col-id" class="col-check" value="ID Transacción"><label for="col-id">ID Transacción</label></div>
+                                <div class="checkbox-wrapper"><input type="checkbox" id="col-type" class="col-check" value="Tipo de Transacción" checked><label for="col-type">Tipo de Transacción</label></div>
+                                <div class="checkbox-wrapper"><input type="checkbox" id="col-status" class="col-check" value="Estado" checked><label for="col-status">Estado (Aprob/Rech)</label></div>
+                                <div class="checkbox-wrapper"><input type="checkbox" id="col-amount" class="col-check" value="Monto"><label for="col-amount">Monto Bs</label></div>
+                            </div>
+
+                            <div class="column-group">
+                                <div class="column-group-title">Datos Personales / TDC</div>
+                                <div class="checkbox-wrapper"><input type="checkbox" id="col-user" class="col-check" value="Nombre del Titular" checked><label for="col-user">Nombre y Apellido</label></div>
+                                <div class="checkbox-wrapper"><input type="checkbox" id="col-doc" class="col-check" value="Documento Identidad" checked><label for="col-doc">Documento Identidad</label></div>
+                                <div class="checkbox-wrapper"><input type="checkbox" id="col-bank" class="col-check" value="Banco Emisor" checked><label for="col-bank">Banco Emisor</label></div>
+                                <div class="checkbox-wrapper"><input type="checkbox" id="col-flag" class="col-check" value="Bandera/Marca" checked><label for="col-flag">Bandera (Visa/MC)</label></div>
+                                <div class="checkbox-wrapper"><input type="checkbox" id="col-tar" class="col-check" value="Número Tarjeta (PAN)" checked><label for="col-tar">Número Tarjeta (PAN)</label></div>
+                            </div>
+
+                            <div class="column-group">
+                                <div class="column-group-title">Contabilidad y Conciliación</div>
+                                <div class="checkbox-wrapper"><input type="checkbox" id="col-acc" class="col-check" value="Nro Cuenta Cliente"><label for="col-acc">Nro Cuenta Cliente</label></div>
+                                <div class="checkbox-wrapper"><input type="checkbox" id="col-com" class="col-check" value="Comisión Adquirente"><label for="col-com">Comisión Adquirente</label></div>
+                                <div class="checkbox-wrapper"><input type="checkbox" id="col-liq" class="col-check" value="Lote de Liquidación"><label for="col-liq">Lote de Liquidación</label></div>
+                            </div>
+                        </div>
+
+                        <!-- Builder Preview -->
+                        <div class="rb-preview">
+                            <div class="input-group" style="max-width: 400px;">
+                                <label>Nombre del Reporte Personalizado</label>
+                                <input type="text" placeholder="Ej: Autorizaciones POS VIP" value="Reporte de Autorización Custom">
+                            </div>
+                            
+                            <div class="preview-header mt-4">
+                                <h4 class="font-semibold text-sm">Columnas Seleccionadas</h4>
+                                <span class="text-xs text-muted" id="col-count">7 seleccionadas</span>
+                            </div>
+
+                            <div class="tag-list" id="selected-columns">
+                                <!-- Tags will be injected via JS -->
+                            </div>
+
+                            <div class="empty-state hidden" id="empty-cols">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg>
+                                <h3>No hay columnas seleccionadas</h3>
+                                <p class="text-sm mt-2">Selecciona campos del menú lateral para previsualizar el dataset.</p>
+                            </div>
+
+                            <div style="margin-top: 2rem; border-top: 1px dashed var(--border-color); padding-top: 1.5rem;">
+                                <h4 class="font-semibold text-sm mb-2">Vista Previa AWS QuickSight (Estructura)</h4>
+                                <div class="mock-chart text-xs" style="height: 120px; text-align:center;">
+                                    Dataset preparado para ingesta SPICE. <br>Estructura tabular lista.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VIEW 3: AUTH REPORT (TABLE) -->
+                <div id="auth-report-view" class="view-content hidden animate-fade-in">
+                    <div class="page-header">
+                        <div>
+                            <h1 class="page-title">Reporte de Autorización de Transacciones</h1>
+                            <p class="page-description">Logs detallados de switches transaccionales y pasarelas POS.</p>
+                        </div>
+                        <div class="flex gap-2">
+                            <button class="btn btn-outline" onclick="showToast('Exportando a CSV...')">Exportar (CSV)</button>
+                            <button class="btn btn-primary" onclick="showToast('Filtrando datos en QuickSight env...')">
+                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 8px;"><path d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
+                                Filtros Avanzados
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="data-table-container">
+                        <div class="table-toolbar">
+                            <h3 class="font-semibold" style="font-size: 0.875rem;">Visor Tabular</h3>
+                            <div class="table-search">
+                                <input type="text" placeholder="Buscar por ID, Cédula o Tarjeta..." onkeyup="filterTable(this.value)">
+                            </div>
+                        </div>
+                        <div style="overflow-x: auto;">
+                            <!-- Mocked Data Table based on requirements -->
+                            <table id="transactions-table">
+                                <thead>
+                                    <tr>
+                                        <th>ID Transacción</th>
+                                        <th>Fecha/Hora</th>
+                                        <th>Titular</th>
+                                        <th>Documento</th>
+                                        <th>Banco</th>
+                                        <th>Bandera</th>
+                                        <th>Tarjeta (PAN)</th>
+                                        <th>Tipo Tx</th>
+                                        <th>Estado</th>
+                                        <th style="text-align: right;">Monto (Bs)</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="table-body">
+                                    <!-- Populated via JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="pagination">
+                            <div>Mostrando 1 a 10 de 1,248 registros</div>
+                            <div class="flex gap-2">
+                                <button class="btn btn-outline" style="padding: 0.25rem 0.5rem;" disabled>Anterior</button>
+                                <button class="btn btn-outline" style="padding: 0.25rem 0.5rem;" onclick="showToast('Cargando más...')">Siguiente</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- TOAST NOTIFICATION -->
+    <div id="toast">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--success);"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        <span id="toast-msg">Acción exitosa</span>
+    </div>
+
+    <script>
+        // DOM Elements
+        const loginView = document.getElementById('login-view');
+        const appView = document.getElementById('app-view');
+        const loginForm = document.getElementById('login-form');
+        const loginError = document.getElementById('login-error');
+        const navItems = document.querySelectorAll('.nav-item[data-target]');
+        const views = document.querySelectorAll('.view-content');
+        const breadcrumb = document.getElementById('breadcrumb-current');
+        const toast = document.getElementById('toast');
+        const toastMsg = document.getElementById('toast-msg');
+
+        // MOCK DATA: Fintech POS Transactions
+        const mockTransactions = [
+            { id: 'TRX-99381A', date: '2026-03-11 10:15', first: 'Mariana', last: 'Ybanez', doc: 'V-18.***.452', bank: 'Banesco', flag: 'Visa', pan: '**** **** **** 4591', type: 'Compra', status: 'Autorizado', amount: '1,250.00' },
+            { id: 'TRX-99382B', date: '2026-03-11 10:18', first: 'Carlos', last: 'Pérez', doc: 'V-15.***.112', bank: 'Mercantil', flag: 'Mastercard', pan: '**** **** **** 8821', type: 'Anulación', status: 'Autorizado', amount: '450.50' },
+            { id: 'TRX-99383C', date: '2026-03-11 10:22', first: 'Luis', last: 'García', doc: 'V-20.***.990', bank: 'Provincial', flag: 'Visa', pan: '**** **** **** 1024', type: 'Compra', status: 'Rechazado', amount: '8,900.00' },
+            { id: 'TRX-99384D', date: '2026-03-11 10:25', first: 'Ana', last: 'López', doc: 'E-82.***.441', bank: 'BNC', flag: 'Maestro', pan: '**** **** **** 5543', type: 'Compra', status: 'Autorizado', amount: '120.00' },
+            { id: 'TRX-99385E', date: '2026-03-11 10:28', first: 'José', last: 'Martínez', doc: 'V-12.***.333', bank: 'Banesco', flag: 'Visa', pan: '**** **** **** 7712', type: 'Cancelación', status: 'Autorizado', amount: '3,400.00' },
+            { id: 'TRX-99386F', date: '2026-03-11 10:31', first: 'María', last: 'Rodríguez', doc: 'V-19.***.101', bank: 'Tesoro', flag: 'Mastercard', pan: '**** **** **** 0092', type: 'Compra', status: 'Rechazado', amount: '56.00' },
+            { id: 'TRX-99387G', date: '2026-03-11 10:35', first: 'Pedro', last: 'Gómez', doc: 'V-11.***.555', bank: 'Banesco', flag: 'Visa', pan: '**** **** **** 3341', type: 'Compra', status: 'Autorizado', amount: '780.25' },
+            { id: 'TRX-99388H', date: '2026-03-11 10:40', first: 'Laura', last: 'Díaz', doc: 'V-22.***.765', bank: 'Exterior', flag: 'Mastercard', pan: '**** **** **** 9918', type: 'Compra', status: 'Autorizado', amount: '2,150.00' },
+        ];
+
+        // LOGIC: Authentication Route
+        loginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const user = document.getElementById('username').value;
+            const pass = document.getElementById('password').value;
+            
+            if(user.trim() !== '' && pass.trim() !== '') {
+                loginView.classList.add('hidden');
+                appView.classList.remove('hidden');
+                
+                // Initialize modules
+                renderTable(mockTransactions);
+                updateBuilderPreview();
+                showToast('Bienvenido, conexión segura establecida.');
+            } else {
+                loginError.style.display = 'block';
+            }
+        });
+
+        function logout() {
+            appView.classList.add('hidden');
+            loginView.classList.remove('hidden');
+            loginError.style.display = 'none';
+        }
+
+        // LOGIC: Navigation
+        navItems.forEach(item => {
+            item.addEventListener('click', () => {
+                const target = item.getAttribute('data-target');
+                if(!target) return;
+                switchView(target);
+            });
+        });
+
+        function switchView(targetId) {
+            // Update nav active state
+            navItems.forEach(n => {
+                if(n.getAttribute('data-target') === targetId) {
+                    n.classList.add('active');
+                    breadcrumb.innerText = n.innerText.trim();
+                } else {
+                    n.classList.remove('active');
+                }
+            });
+
+            // Update views
+            views.forEach(v => {
+                if(v.id === targetId) {
+                    v.classList.remove('hidden');
+                } else {
+                    v.classList.add('hidden');
+                }
+            });
+        }
+
+        // LOGIC: Table Population & Search
+        function renderTable(data) {
+            const tbody = document.getElementById('table-body');
+            tbody.innerHTML = '';
+            
+            data.forEach(tx => {
+                const statusBadge = tx.status === 'Autorizado' ? 'badge-auth' : 'badge-rej';
+                const typeClass = tx.type === 'Compra' ? 'badge-type-compra' : (tx.type === 'Anulación' ? 'badge-type-anul' : '');
+                
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td style="font-family: monospace; font-weight:600; color:var(--primary)">${tx.id}</td>
+                    <td>${tx.date}</td>
+                    <td>${tx.first} ${tx.last}</td>
+                    <td>${tx.doc}</td>
+                    <td>${tx.bank}</td>
+                    <td>${tx.flag}</td>
+                    <td style="letter-spacing: 1px;">${tx.pan}</td>
+                    <td><span class="badge ${typeClass}">${tx.type}</span></td>
+                    <td><span class="badge ${statusBadge}">${tx.status}</span></td>
+                    <td style="text-align: right; font-weight:600;">${tx.amount}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function filterTable(query) {
+            const q = query.toLowerCase();
+            const filtered = mockTransactions.filter(tx => 
+                tx.id.toLowerCase().includes(q) || 
+                tx.doc.toLowerCase().includes(q) || 
+                tx.pan.toLowerCase().includes(q) ||
+                tx.first.toLowerCase().includes(q) ||
+                tx.last.toLowerCase().includes(q)
+            );
+            renderTable(filtered);
+        }
+
+        // LOGIC: Report Builder Drag/Drop/Check
+        const colChecks = document.querySelectorAll('.col-check');
+        const selectedColumnsCont = document.getElementById('selected-columns');
+        const colCount = document.getElementById('col-count');
+        const emptyState = document.getElementById('empty-cols');
+
+        colChecks.forEach(check => {
+            check.addEventListener('change', updateBuilderPreview);
+        });
+
+        function updateBuilderPreview() {
+            selectedColumnsCont.innerHTML = '';
+            let count = 0;
+            colChecks.forEach(check => {
+                if(check.checked) {
+                    count++;
+                    const tag = document.createElement('div');
+                    tag.className = 'tag';
+                    tag.innerHTML = `
+                        ${check.value}
+                        <svg class="remove" onclick="uncheckCol('${check.id}')" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 18L18 6M6 6l12 12"></path></svg>
+                    `;
+                    selectedColumnsCont.appendChild(tag);
+                }
+            });
+
+            colCount.innerText = `${count} seleccionadas`;
+            
+            if(count === 0) {
+                emptyState.classList.remove('hidden');
+                selectedColumnsCont.classList.add('hidden');
+            } else {
+                emptyState.classList.add('hidden');
+                selectedColumnsCont.classList.remove('hidden');
+            }
+        }
+
+        function uncheckCol(id) {
+            document.getElementById(id).checked = false;
+            updateBuilderPreview();
+        }
+
+        function resetBuilder() {
+            colChecks.forEach(check => check.checked = false);
+            updateBuilderPreview();
+        }
+
+        // LOGIC: Toast
+        let toastTimeout;
+        function showToast(message) {
+            toastMsg.innerText = message;
+            toast.classList.add('show');
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
