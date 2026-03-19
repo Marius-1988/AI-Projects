@@ -396,6 +396,28 @@ h4 {
     border-left: 2px solid var(--primary);
 }
 
+.markdown-preview h1, .markdown-preview h2, .markdown-preview h3 {
+    margin-top: 1.5em;
+    margin-bottom: 0.5em;
+    color: var(--text-main);
+}
+.markdown-preview p, .markdown-preview ul, .markdown-preview ol {
+    margin-bottom: 1em;
+    color: var(--text-main);
+}
+.markdown-preview code {
+    background-color: var(--bg-main);
+    padding: 2px 4px;
+    border-radius: 4px;
+    font-family: monospace;
+    font-size: 0.9em;
+}
+.markdown-preview pre code {
+    display: block;
+    padding: 10px;
+    overflow-x: auto;
+}
+
 /* Modal */
 .modal {
     position: fixed;

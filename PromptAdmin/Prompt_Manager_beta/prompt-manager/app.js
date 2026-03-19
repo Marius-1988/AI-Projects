@@ -40,6 +40,7 @@ const sectionDescInput = document.getElementById('section-desc');
 const createSectionSelect = document.getElementById('create-section');
 const dashboardSection = document.getElementById('dashboard-section');
 const dynamicSection = document.getElementById('dynamic-section');
+const dynamicSectionTitle = document.getElementById('dynamic-section-title');
 const dynamicSectionDesc = document.getElementById('dynamic-section-desc');
 const popularCasesGrid = document.getElementById('popular-cases-grid');
 const navRepo = document.getElementById('nav-repo');
@@ -1280,7 +1281,17 @@ window.previewRepoFile = (item) => {
         previewContent.innerHTML = '<div class="text-muted">Obteniendo contenido del archivo...</div>';
         fetch(item.download_url)
             .then(r => r.text())
-            .then(t => { previewContent.textContent = t; })
+            .then(t => { 
+                if (ext === 'md' && window.marked) {
+                    previewContent.style.fontFamily = 'inherit';
+                    previewContent.style.whiteSpace = 'normal';
+                    previewContent.innerHTML = '<div class="markdown-preview" style="line-height:1.6;">' + marked.parse(t) + '</div>';
+                } else {
+                    previewContent.style.fontFamily = 'monospace';
+                    previewContent.style.whiteSpace = 'pre-wrap';
+                    previewContent.textContent = t; 
+                }
+            })
             .catch(e => { previewContent.innerHTML = '<div class="text-danger">Error al cargar preview.</div>'; });
     } else {
         previewContent.style.display = 'block';
