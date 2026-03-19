@@ -131,6 +131,13 @@ const createRules = document.getElementById('create-rules');
 const createInput = document.getElementById('create-input');
 const createStatus = document.getElementById('create-status');
 
+// Modal Asignar Caso
+const modalAssign = document.getElementById('modal-assign');
+const formAssign = document.getElementById('form-assign');
+const assignNameInput = document.getElementById('assign-name');
+const btnSaveAssign = document.getElementById('btn-save-assign');
+let assigningUseCaseId = null;
+
 // Modal Ejecución Contexto
 const modalExecute = document.getElementById('modal-execute');
 const execTitle = document.getElementById('exec-title');
@@ -1194,12 +1201,28 @@ window.handleAssignClick = (id, event) => {
     event.stopPropagation();
     const uc = useCases.find(c => c.id === id);
     if (!uc) return;
-    const name = prompt("Asignar caso de uso a (dejar vacío para desasignar):", uc.assignedTo || "");
-    if (name !== null) {
-        uc.assignedTo = name.trim();
-        saveCases().then(() => { if(currentView === 'dashboard') renderPopularCases(); else renderUseCases(); });
-    }
+    
+    assigningUseCaseId = id;
+    assignNameInput.value = uc.assignedTo || '';
+    openModal('modal-assign');
+    setTimeout(() => assignNameInput.focus(), 100);
 };
+
+btnSaveAssign.addEventListener('click', (e) => {
+    e.preventDefault();
+    if (assigningUseCaseId) {
+        const uc = useCases.find(c => c.id === assigningUseCaseId);
+        if (uc) {
+            uc.assignedTo = assignNameInput.value.trim();
+            saveCases().then(() => { 
+                if(currentView === 'dashboard') renderPopularCases(); else renderUseCases(); 
+                showToast("Caso asignado exitosamente");
+            });
+        }
+        closeModal('modal-assign');
+        assigningUseCaseId = null;
+    }
+});
 
 window.handleStatusChange = (id, selectElement) => {
     const uc = useCases.find(c => c.id === id);

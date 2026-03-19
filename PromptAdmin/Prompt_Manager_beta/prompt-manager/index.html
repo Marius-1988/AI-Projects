@@ -371,6 +371,28 @@
             </div>
         </div>
 
+        <!-- Modal: Asignar Caso de Uso -->
+        <div id="modal-assign" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Asignar Caso de Uso</h3>
+                    <button class="btn-close" onclick="closeModal('modal-assign')">×</button>
+                </div>
+                <div class="modal-body">
+                    <form id="form-assign">
+                        <div class="form-group">
+                            <label for="assign-name">Asignar a:</label>
+                            <input type="text" id="assign-name" placeholder="Nombre de la persona (vacío para desasignar)">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-outline" onclick="closeModal('modal-assign')">Cancelar</button>
+                    <button class="btn btn-primary" id="btn-save-assign">Guardar Asignación</button>
+                </div>
+            </div>
+        </div>
+
         <!-- Panel de Debugging (Oculto en Prod) -->
         <div id="debug-panel" class="debug-panel hidden" style="display: none !important;">
             <div class="debug-header">
