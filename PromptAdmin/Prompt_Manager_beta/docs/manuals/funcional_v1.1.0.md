@@ -1,4 +1,4 @@
-# Product Requirements Document & Manual Funcional - Prompt Manager v1.0.0
+# Product Requirements Document & Manual Funcional - Prompt Manager v1.1.0
 
 > *"El software exitoso se construye sobre la base de entender y resolver un problema real del usuario con la menor fricción posible."* — Inspirado en *Don't Make Me Think* (Steve Krug) y *User Story Mapping* (Jeff Patton).
 
@@ -8,7 +8,7 @@ Este documento funciona como fuente de verdad integral del producto, combinando 
 
 ## 1. Visión y Propuesta de Valor (Value Proposition Design)
 
-**Propósito del Producto:** Prompt Manager es una plataforma centralizada (SPA) diseñada para Ingenieros de IA, Desarrolladores y Analistas de Negocio. Su objetivo es gobernar, iterar y ejecutar Casos de Uso (Prompts) contra múltiples LLMs (GPT-4o, Claude 3.5, Gemini) de manera controlada y sin fricción técnica.
+**Propósito del Producto:** Prompt Manager v1.1.0 es una plataforma centralizada (SPA) diseñada para Ingenieros de IA, Desarrolladores y Analistas de Negocio. Su objetivo es gobernar, iterar y ejecutar Casos de Uso (Prompts) contra múltiples LLMs (GPT-4o, Claude 3.5, Gemini) de manera controlada y sin fricción técnica.
 
 *   **Customer Jobs (Tareas del Usuario):** Probar prompts, guardar plantillas recurrentes, compartir flujos de trabajo de IA, iterar instrucciones refinando respuestas previas.
 *   **Pains (Dolores actuales):** Perder prompts exitosos atrapados en historiales de chat genéricos, necesidad de copiar y pegar reglas "System" una y otra vez, dificultad extrema de iterar frente a diferentes modelos (OpenAI vs Anthropic) sin cambiar permanentemente de herramienta web y contexto.
@@ -154,6 +154,43 @@ Feature: Motor de Chat Loop y Memoria Contextual Subyacente
     And cuando el usuario ingresa un nuevo texto y presiona "Iterar", este texto viaja encapsulado en el payload final anexando los roles pasados al mismo Request estructural.
 ```
 
+### Epic 4: Estados y Asignaciones (Colaboración)
+
+**US 4.1: Como** Project Manager, **quiero** asignar un estado de ciclo de vida a los casos de uso **para** saber rápidamente qué templates están aptos para usarse de forma productiva.
+```gherkin
+Feature: Ciclo de vida del Prompt
+  
+  Scenario: Cambio de estado reactivo en tarjeta
+    Given que el usuario visualiza cards en la cuadrícula
+    When selecciona el dropdown interactivo de "Estado" en la esquina superior de la tarjeta
+    And cambia de "En construcción" a "Validado"
+    Then el sistema actualiza el estilo de la etiqueta y guarda asíncronamente contra Firebase.
+```
+
+**US 4.2: Como** Lider, **quiero** asignar un usuario responsable a un prompt **para** distribuir la faena de testeo y pre-construcción.
+```gherkin
+Feature: Tagging de Asignación Personal
+  
+  Scenario: Modificación del avatar de asignación
+    Given un prompt huérfano (sin nombre de asignado visualizado)
+    When el usuario pulsa sobre el avatar de agregar humano (+) de la card
+    And ingresa "Mariana" en el Modal que se asoma y pulsa "Guardar Asignación"
+    Then el ícono circular pasará a mostrar textualmente "Mariana".
+```
+
+### Epic 5: Explorador Github Codebase
+
+**US 5.1: Como** Full-stack Developer, **quiero** ver la estructura de código remotamente **para** no necesitar clonar ramas.
+```gherkin
+Feature: Repositorio UI (API Hub)
+  
+  Scenario: Visualizar jerarquías en Split-View
+    Given que el developer interactúa con "Repositorio" en la vista lateral izquierda
+    When el módulo carga en vivo
+    Then el panel presentará a un costado el layout recursivo de carpetas de origin/main
+    And a la derecha previsualizará (con soporte de Markdown) el contenido explícito con opción total de descarga raw hacia el disco.
+```
+
 ---
 
 ## 5. Mapeo Funcional y Navegación Detallada (UI Guide)
@@ -202,4 +239,4 @@ Basado en la filosofía *"No me hagas pensar"* de Steve Krug. Qué ocurre cuando
 *   **Sistemas de Diseño Acoplados:** Se insta a utilizar y referenciar las clases nativas del archivo `styles.css` del repositorio maestro, priorizando el patrón adaptativo `Grid CSS minmax` actual frente a requerir external frameworks monolíticos como Bootstrap o Tailwind con el fin de retener el formato *Zero-Bundle Pipeline*.
 
 ---
-*Elaborado por la Célula de Producto (PO & Business Design) | Actualización Registrada: Marzo 2026. Documentación "Living Document".*
+*Elaborado por la Célula de Producto (PO & Business Design) | Actualización Registrada: Marzo 2026. Documentación "Living Document". Versión 1.1.0*

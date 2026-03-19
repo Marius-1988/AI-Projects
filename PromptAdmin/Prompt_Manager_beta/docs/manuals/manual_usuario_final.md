@@ -1,4 +1,4 @@
-# Manual de Usuario - Prompt Manager v1.0.0
+# Manual de Usuario - Prompt Manager v1.1.0
 
 Bienvenido al manual oficial de **Prompt Manager**. Esta guía le permitirá dominar todas las herramientas para la gestión, ejecución y refinamiento de inteligencia artificial.
 
@@ -77,4 +77,29 @@ Esta es la funcionalidad core del sistema para pruebas interactivas.
 - **Resultado:** Al hacer clic, se abre su aplicación web funcional en una pestaña nueva del navegador.
 
 ---
-*Fin del Manual de Usuario v1.0.0*
+
+## 5. Trabajo en Equipo y Colaboración
+
+### 5.1 Asignaciones de Prompt
+Para facilitar la división de responsabilidades, ahora la tarjeta permite etiquetar a un encargado visualmente:
+1. **Acción:** Ubique, en la tarjeta, el icono circular `(+)` pegado a la pestaña de Estado.
+2. **Respuesta:** Emergirá un pequeño Modal con la instrucción "Asignar a...".
+3. **Acción:** Escriba el nombre en el campo de texto (o borre para desestimar) y de clic en "Guardar Asignación".
+4. **Resultado:** De manera reactiva y con aviso en vivo, el indicador con el nombre se posará en la tarjerta.
+
+### 5.2 Estados de Ciclo de Vida
+Cada tarjeta ostenta una pastilla indicativa superior-derecha evaluando su etapa en la red:
+- **Estados:** *En construcción, Refinamiento, Pruebas, Validado, Publicado.*
+- **Cambio Ágil:** Es una etiqueta-botón. Haga un solo clic sobre el estatus actual para desplegar la lista de red. El sistema almacenará automáticamente su dictamen.
+
+---
+
+## 6. Explorador de Repositorio (GitHub)
+
+Desde su ambiente web, el sistema le permite cotejar la raíz documental del proyecto técnico sin clonar repositorios:
+1. **Ruta:** Pulse **"Repositorio"** desde la barra lateral izquierda `INICIO`.
+2. **Acción:** Inspeccione todo el árbol de carpetas oficiales provenientes de `main` en panel izquierdo.
+3. **Previsualización Inteligente:** Del lado derecho, la pantalla reproducirá al instante archivos `.md` de manera idéntica a manuales pulcros (fuentes, negritas). Los archivos en texto informático los proveerá con mono-espaciado, y las extensiones atípicas le obsequiarán, en defecto, el control primario de descarga completa.
+
+---
+*Fin del Manual de Usuario v1.1.0*

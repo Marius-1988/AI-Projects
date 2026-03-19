@@ -1,8 +1,8 @@
-# Documentación de Ingeniería - Prompt Manager v1.0.0
+# Documentación de Ingeniería - Prompt Manager v1.1.0
 
 > ***"Una arquitectura de software no es más que el conjunto de decisiones de diseño que resultan costosas de cambiar."*** — *Fundamentals of Software Architecture (Mark Richards & Neal Ford).*
 
-Este documento detalla exhaustivamente las decisiones de diseño arquitectónico, el modelo de datos, la lógica subyacente y las integraciones de API que potencian **Prompt Manager v1.0.0**. Concebida para la transferencia de conocimiento ágil y transparente hacia nuevos ingenieros de software, esta guía se estructura enfocándose en la claridad, la extensibilidad y la resiliencia del código.
+Este documento detalla exhaustivamente las decisiones de diseño arquitectónico, el modelo de datos, la lógica subyacente y las integraciones de API que potencian **Prompt Manager v1.1.0**. Concebida para la transferencia de conocimiento ágil y transparente hacia nuevos ingenieros de software, esta guía se estructura enfocándose en la claridad, la extensibilidad y la resiliencia del código.
 
 ---
 
@@ -51,7 +51,9 @@ Maneja el conocimiento global, estructural y colaborativo. Se estructuró bajo e
           "input": "Menú responsive dark mode",
           "sectionId": "sec_17099234123", // FK a Section
           "subsection": "React",          // Agrupación visual dinámica
-          "executeCount": 15              // Metadato para el Dashboard "Top 5 Populares"
+          "executeCount": 15,             // Metadato para el Dashboard "Top 5 Populares"
+          "status": "Validado",           // Ciclo de vida del prompt (En construcción, Refinamiento, etc)
+          "assignedTo": "Mariana"         // Persona responsable a cargo (Frontend tagging)
         }
       ]
     }
@@ -124,4 +126,13 @@ La hoja de cascada `styles.css` adhiere a métricas progresivas.
 *   **Estrategia Flex-Button:** Se emplea `display: flex; gap: 5px; flex-wrap: nowrap` para que los iconos de los botones no colisionen (clip) contra las cajas delimitadoras de texto en pantallas reducidas.
 
 ---
-*Fin Documentación de Ingeniería v1.0.0. Revisado Marzo 2026. Antigravity AI & Marius.*
+
+## 6. Integración de Sistemas Externos
+
+### 6.1 Explorador de Repositorio (GitHub API REST)
+A partir de la versión 1.1.0, el sistema incluye un módulo `loadRepo()` acoplado a la API pública de GitHub. No requiere de personal API Tokens para operar su límite estándar público:
+1.  **Exploración Recursiva (`fetchRepoDir`):** Invoca metadatos del árbol de directorios obteniendo en vivo los contenidos mediante `GET /repos/{owner}/{repo}/contents/{path}` mapeándolos como nodos jerárquicos.
+2.  **Preview Markdown Nativo:** Identifica formato `.md` y apalanca la librería `marked.js` inyectada en capa HTML. Transforma *Abstract Syntax Trees (AST)* a DOM renderizable insertando de forma segura código enriquecido.
+
+---
+*Fin Documentación de Ingeniería v1.1.0. Revisado Marzo 2026. Antigravity AI & Marius.*
