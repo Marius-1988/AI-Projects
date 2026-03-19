@@ -19,8 +19,6 @@
         <div style="display:flex; gap:10px; align-items:center;">
             <button id="btn-settings" class="btn btn-outline"
                 style="border-color: #64748b; color: #64748b; padding: 10px;" title="Configurar API Keys">⚙️</button>
-            <button id="btn-create-demo" class="btn btn-outline"
-                style="border-color: var(--primary); color: var(--primary); font-weight: 600;">+ Añadir Proyecto</button>
             <button id="btn-create-prompt" class="btn btn-primary">+ Crear Caso de Uso</button>
         </div>
     </header>
@@ -35,6 +33,7 @@
 
             <ul class="sidebar-nav" id="sidebar-nav">
                 <li class="nav-item active" id="nav-dashboard">🏠 Inicio</li>
+                <li class="nav-item" id="nav-repo">📁 Repositorio</li>
                 <div class="nav-divider"></div>
                 <div class="sidebar-subheader">SECCIONES</div>
                 <!-- Se inyectan las secciones con JS -->
@@ -65,7 +64,11 @@
 
                 <div id="demos-section">
                     <div class="section-header">
-                        <h2>🛠 Mis Proyectos</h2>
+                        <div style="display:flex; align-items:center; gap: 10px;">
+                            <h2 style="margin:0;">🛠 Mis Proyectos</h2>
+                            <button id="btn-create-demo" class="btn btn-outline"
+                                style="border-color: var(--primary); color: var(--primary); font-weight: 600; padding: 0; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; line-height: 1;" title="Añadir Proyecto">+</button>
+                        </div>
                         <p>Enlaces a los resultados y aplicaciones generadas.</p>
                     </div>
                     <div id="demos-grid" class="grid-container">
@@ -85,6 +88,26 @@
                     <!-- Se inyectan los casos creados en esta sección a través de JS -->
                     <div class="empty-state" id="empty-state">
                         Esta sección está vacía. Crea un Caso de Uso y asígnalo aquí.
+                    </div>
+                </div>
+            </section>
+
+            <!-- Sección Repositorio -->
+            <section class="dashboard" id="repo-section" style="display: none; height: 100%;">
+                <div class="section-header">
+                    <h2>📁 Repositorio GitHub</h2>
+                    <p>Explorador de archivos de Prompt_Manager_beta</p>
+                </div>
+                <div style="display: flex; gap: 20px; height: calc(100vh - 200px);">
+                    <div id="repo-tree" style="flex: 1; min-width: 250px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; overflow-y: auto; font-family: monospace;">
+                        <div class="text-muted">Cargando repositorio...</div>
+                    </div>
+                    <div id="repo-preview" style="flex: 2; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; overflow-y: auto;">
+                        <div class="empty-state" id="repo-preview-empty">Selecciona un archivo del árbol para previsualizarlo.</div>
+                        <div id="repo-preview-content" style="display:none; white-space: pre-wrap; font-family: monospace; font-size: 0.9rem;"></div>
+                        <div id="repo-preview-actions" style="margin-top: 20px; display: none;">
+                            <button id="btn-download-repo-file" class="btn btn-primary" style="font-size: 0.85rem;">⬇️ Descargar Archivo</button>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -116,6 +139,16 @@
                     <div class="form-group" id="group-create-subsection" style="display: none;">
                         <label for="create-subsection">Sub-Sección</label>
                         <select id="create-subsection">
+                        </select>
+                    </div>
+                    <div class="form-group" id="group-create-status">
+                        <label for="create-status">Estado del Caso de Uso</label>
+                        <select id="create-status">
+                            <option value="En construcción" selected>En construcción</option>
+                            <option value="Refinamiento">Refinamiento</option>
+                            <option value="Pruebas">Pruebas</option>
+                            <option value="Validado">Validado</option>
+                            <option value="Publicado">Publicado</option>
                         </select>
                     </div>
                     <div class="form-group">

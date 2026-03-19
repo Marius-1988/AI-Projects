@@ -303,6 +303,99 @@ h4 {
     margin-bottom: 15px;
 }
 
+/* Tags de Estado y Asignación */
+.tags-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.tags-left {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.tags-right {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.status-tag {
+    font-size: 0.70rem;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 12px;
+    cursor: pointer;
+    user-select: none;
+    transition: filter 0.2s;
+    appearance: none;
+    -webkit-appearance: none;
+    border: none;
+    outline: none;
+    font-family: inherit;
+}
+
+.status-tag:hover {
+    filter: brightness(0.9);
+}
+
+.status-en-construccion { background-color: #fef3c7; color: #d97706; }
+.status-refinamiento { background-color: #e0f2fe; color: #0284c7; }
+.status-pruebas { background-color: #f3e8ff; color: #9333ea; }
+.status-validado { background-color: #dcfce7; color: #16a34a; }
+.status-publicado { background-color: #d1fae5; color: #059669; }
+
+.assign-tag {
+    font-size: 0.70rem;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 12px;
+    background-color: var(--bg-main);
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    cursor: pointer;
+    min-width: 24px;
+    min-height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
+}
+.assign-tag.empty {
+    border-radius: 50%;
+    padding: 0;
+}
+
+/* Archivos de Repo */
+.repo-folder {
+    font-weight: 600;
+    cursor: pointer;
+    padding: 5px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+.repo-folder:hover { background-color: var(--bg-main); }
+
+.repo-file {
+    font-weight: 400;
+    cursor: pointer;
+    padding: 5px 5px 5px 20px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+.repo-file:hover { background-color: var(--bg-main); color: var(--primary); }
+
+.repo-file.active {
+    background-color: #e0e7ff;
+    color: var(--primary);
+    border-left: 2px solid var(--primary);
+}
+
 /* Modal */
 .modal {
     position: fixed;

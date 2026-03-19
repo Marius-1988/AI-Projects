@@ -25,6 +25,7 @@ let sections = [];
 let currentExecutingCase = null;
 let currentMessagesHistory = [];
 let currentView = 'dashboard';
+let repoLoaded = false;
 
 // Punteros al DOM (Sidebar y Secciones)
 const navDashboard = document.getElementById('nav-dashboard');
@@ -39,9 +40,11 @@ const sectionDescInput = document.getElementById('section-desc');
 const createSectionSelect = document.getElementById('create-section');
 const dashboardSection = document.getElementById('dashboard-section');
 const dynamicSection = document.getElementById('dynamic-section');
-const dynamicSectionTitle = document.getElementById('dynamic-section-title');
 const dynamicSectionDesc = document.getElementById('dynamic-section-desc');
 const popularCasesGrid = document.getElementById('popular-cases-grid');
+const navRepo = document.getElementById('nav-repo');
+const repoSection = document.getElementById('repo-section');
+const repoTree = document.getElementById('repo-tree');
 
 // Punteros Editar Sección
 const btnEditSections = document.getElementById('btn-edit-sections');
@@ -125,6 +128,7 @@ const btnSaveUseCase = document.getElementById('btn-save-usecase');
 const createName = document.getElementById('create-name');
 const createRules = document.getElementById('create-rules');
 const createInput = document.getElementById('create-input');
+const createStatus = document.getElementById('create-status');
 
 // Modal Ejecución Contexto
 const modalExecute = document.getElementById('modal-execute');
@@ -201,6 +205,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 // Lógica Sidebar
 navDashboard.addEventListener('click', () => switchView('dashboard'));
+if(navRepo) navRepo.addEventListener('click', () => switchView('repo'));
+
 btnCreateSection.addEventListener('click', () => {
     formSection.reset();
     openModal('modal-section');
@@ -295,7 +301,14 @@ function switchView(viewId) {
         navDashboard.classList.add('active');
         dashboardSection.style.display = 'block';
         dynamicSection.style.display = 'none';
+        repoSection.style.display = 'none';
         renderPopularCases();
+    } else if (viewId === 'repo') {
+        navRepo.classList.add('active');
+        dashboardSection.style.display = 'none';
+        dynamicSection.style.display = 'none';
+        repoSection.style.display = 'block';
+        if (!repoLoaded) loadRepo();
     } else {
         // Buscar el item clickeado en la lista lateral
         const link = document.getElementById('nav-' + viewId);
@@ -309,6 +322,7 @@ function switchView(viewId) {
         }
 
         dashboardSection.style.display = 'none';
+        repoSection.style.display = 'none';
         dynamicSection.style.display = 'block';
         renderUseCases();
     }
@@ -401,6 +415,7 @@ async function saveCases() {
 btnCreatePrompt.addEventListener('click', () => {
     formCreate.reset();
     editingUseCaseId = null;
+    createStatus.value = 'En construcción';
     if (modalCreateTitle) modalCreateTitle.textContent = 'Nuevo Caso de Uso';
     // reset select dropdown
     groupCreateSubsection.style.display = 'none';
@@ -452,6 +467,7 @@ btnSaveUseCase.addEventListener('click', async (e) => {
                 useCases[ucIndex].input = createInput.value.trim();
                 useCases[ucIndex].sectionId = selectedSectionId; // Update section
                 useCases[ucIndex].subsection = selectedSub;
+                useCases[ucIndex].status = createStatus.value;
             }
             await saveCases();
             showToast('Caso de Uso actualizado exitosamente');
@@ -464,6 +480,7 @@ btnSaveUseCase.addEventListener('click', async (e) => {
                 input: createInput.value.trim(),
                 sectionId: selectedSectionId,
                 subsection: selectedSub,
+                status: createStatus.value,
                 executeCount: 0 // New field for popularity
             };
             useCases.push(newCase);
@@ -603,8 +620,29 @@ function renderUseCases() {
                 const card = document.createElement('div');
                 card.className = 'usecase-card';
 
+                const statusRaw = uc.status || 'En construcción';
+                const statusSlug = statusRaw.toLowerCase().replace(/ /g, '-').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+                const assignText = uc.assignedTo ? uc.assignedTo : '+';
+
+                const tagsHTML = `
+                    <div class="tags-container" onclick="event.stopPropagation();">
+                        <div class="tags-left"></div>
+                        <div class="tags-right">
+                            <div class="assign-tag ${uc.assignedTo ? '' : 'empty'}" onclick="handleAssignClick('${uc.id}', event)" title="Asignar Caso">${assignText}</div>
+                            <select class="status-tag status-${statusSlug}" onchange="handleStatusChange('${uc.id}', this)">
+                                <option style="background:#fff;color:#000;" value="En construcción" ${statusRaw==='En construcción'?'selected':''}>En construcción</option>
+                                <option style="background:#fff;color:#000;" value="Refinamiento" ${statusRaw==='Refinamiento'?'selected':''}>Refinamiento</option>
+                                <option style="background:#fff;color:#000;" value="Pruebas" ${statusRaw==='Pruebas'?'selected':''}>Pruebas</option>
+                                <option style="background:#fff;color:#000;" value="Validado" ${statusRaw==='Validado'?'selected':''}>Validado</option>
+                                <option style="background:#fff;color:#000;" value="Publicado" ${statusRaw==='Publicado'?'selected':''}>Publicado</option>
+                            </select>
+                        </div>
+                    </div>
+                `;
+
                 card.innerHTML = `
                     <div onclick="openExecuteModal('${uc.id}')" style="flex-grow: 1; cursor: pointer;">
+                        ${tagsHTML}
                         <h3 class="usecase-title">${uc.name}</h3>
                         <p class="usecase-desc">${uc.rules}</p>
                     </div>
@@ -642,9 +680,31 @@ function renderPopularCases() {
         const belongsTo = sections.find(s => s.id === uc.sectionId);
         const sectionNameStr = belongsTo ? belongsTo.name : 'Misceláneos';
 
+        const statusRaw = uc.status || 'En construcción';
+        const statusSlug = statusRaw.toLowerCase().replace(/ /g, '-').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        const assignText = uc.assignedTo ? uc.assignedTo : '+';
+
+        const tagsHTML = `
+            <div class="tags-container" onclick="event.stopPropagation();">
+                <div class="tags-left">
+                    <div style="font-size:0.75rem; color:#f59e0b; font-weight:bold;">📍 ${sectionNameStr}</div>
+                </div>
+                <div class="tags-right">
+                    <div class="assign-tag ${uc.assignedTo ? '' : 'empty'}" onclick="handleAssignClick('${uc.id}', event)" title="Asignar Caso">${assignText}</div>
+                    <select class="status-tag status-${statusSlug}" onchange="handleStatusChange('${uc.id}', this)">
+                        <option style="background:#fff;color:#000;" value="En construcción" ${statusRaw==='En construcción'?'selected':''}>En construcción</option>
+                        <option style="background:#fff;color:#000;" value="Refinamiento" ${statusRaw==='Refinamiento'?'selected':''}>Refinamiento</option>
+                        <option style="background:#fff;color:#000;" value="Pruebas" ${statusRaw==='Pruebas'?'selected':''}>Pruebas</option>
+                        <option style="background:#fff;color:#000;" value="Validado" ${statusRaw==='Validado'?'selected':''}>Validado</option>
+                        <option style="background:#fff;color:#000;" value="Publicado" ${statusRaw==='Publicado'?'selected':''}>Publicado</option>
+                    </select>
+                </div>
+            </div>
+        `;
+
         card.innerHTML = `
             <div onclick="openExecuteModal('${uc.id}')" style="flex-grow: 1; cursor: pointer;">
-                <div style="font-size:0.75rem; color:#f59e0b; margin-bottom:5px; font-weight:bold;">📍 ${sectionNameStr}</div>
+                ${tagsHTML}
                 <h3 class="usecase-title">${uc.name}</h3>
                 <p class="usecase-desc">${uc.rules}</p>
             </div>
@@ -668,6 +728,7 @@ window.editUseCase = (id, event) => {
     createName.value = uc.name;
     createRules.value = uc.rules;
     createInput.value = uc.input || '';
+    createStatus.value = uc.status || 'En construcción';
     createSectionSelect.value = uc.sectionId || '';
 
     createSectionSelect.dispatchEvent(new Event('change'));
@@ -1126,3 +1187,103 @@ function showToast(message) {
         toast.classList.add('hidden');
     }, 3000);
 }
+
+// ---- Lógica de Modificadores en Tarjeta (Estado / Asignar) ----
+window.handleAssignClick = (id, event) => {
+    event.stopPropagation();
+    const uc = useCases.find(c => c.id === id);
+    if (!uc) return;
+    const name = prompt("Asignar caso de uso a (dejar vacío para desasignar):", uc.assignedTo || "");
+    if (name !== null) {
+        uc.assignedTo = name.trim();
+        saveCases().then(() => { if(currentView === 'dashboard') renderPopularCases(); else renderUseCases(); });
+    }
+};
+
+window.handleStatusChange = (id, selectElement) => {
+    const uc = useCases.find(c => c.id === id);
+    if (!uc) return;
+    uc.status = selectElement.value;
+    saveCases().then(() => { if(currentView === 'dashboard') renderPopularCases(); else renderUseCases(); });
+};
+
+// ---- Lógica de Repositorio ----
+window.loadRepo = async () => {
+    repoLoaded = true;
+    fetchRepoDir('PromptAdmin/Prompt_Manager_beta', repoTree);
+};
+
+window.fetchRepoDir = async (path, container) => {
+    container.innerHTML = '<div class="text-muted">Cargando...</div>';
+    try {
+        const res = await fetch(`https://api.github.com/repos/Marius-1988/AI-Projects/contents/${path}`);
+        if(!res.ok) throw new Error("Recurso no encontrado o límite de API alcanzado.");
+        const data = await res.json();
+        container.innerHTML = '';
+        if (Array.isArray(data)) {
+            data.forEach(item => {
+                const div = document.createElement('div');
+                if (item.type === 'dir') {
+                    div.className = 'repo-folder';
+                    div.innerHTML = `📁 ${item.name}`;
+                    const subContainer = document.createElement('div');
+                    subContainer.style.paddingLeft = '15px';
+                    subContainer.style.display = 'none';
+                    div.onclick = async (e) => {
+                        e.stopPropagation();
+                        if (subContainer.style.display === 'none') {
+                            subContainer.style.display = 'block';
+                            if (subContainer.innerHTML === '') window.fetchRepoDir(item.path, subContainer);
+                        } else {
+                            subContainer.style.display = 'none';
+                        }
+                    };
+                    container.appendChild(div);
+                    container.appendChild(subContainer);
+                } else {
+                    div.className = 'repo-file';
+                    div.innerHTML = `📄 ${item.name}`;
+                    div.onclick = (e) => {
+                        e.stopPropagation();
+                        document.querySelectorAll('.repo-file').forEach(el => el.classList.remove('active'));
+                        div.classList.add('active');
+                        window.previewRepoFile(item);
+                    };
+                    container.appendChild(div);
+                }
+            });
+        } else {
+            container.innerHTML = '<div class="text-danger">Formato inválido de Github.</div>';
+        }
+    } catch (e) {
+        container.innerHTML = `<div class="text-danger">Error: ${e.message}</div>`;
+    }
+};
+
+window.previewRepoFile = (item) => {
+    const previewContent = document.getElementById('repo-preview-content');
+    const empty = document.getElementById('repo-preview-empty');
+    const actions = document.getElementById('repo-preview-actions');
+    const btnDl = document.getElementById('btn-download-repo-file');
+    
+    empty.style.display = 'none';
+    previewContent.style.display = 'none';
+    actions.style.display = 'block';
+    
+    btnDl.onclick = () => window.open(item.download_url, '_blank');
+    
+    const ext = item.name.split('.').pop().toLowerCase();
+    const textExts = ['js', 'html', 'css', 'json', 'md', 'txt', 'csv', 'yaml', 'xml'];
+    
+    if (textExts.includes(ext)) {
+        previewContent.style.display = 'block';
+        previewContent.innerHTML = '<div class="text-muted">Obteniendo contenido del archivo...</div>';
+        fetch(item.download_url)
+            .then(r => r.text())
+            .then(t => { previewContent.textContent = t; })
+            .catch(e => { previewContent.innerHTML = '<div class="text-danger">Error al cargar preview.</div>'; });
+    } else {
+        previewContent.style.display = 'block';
+        previewContent.innerHTML = `<div class="text-muted">🕒 No hay vista rápida disponible para el formato .${ext}. Utiliza el botón de descarga.</div>`;
+    }
+};
