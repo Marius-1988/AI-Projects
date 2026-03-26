@@ -1254,25 +1254,6 @@ btnRunPrompt.addEventListener('click', () => {
             const textData = response.data;
             currentMessagesHistory.push({ role: "assistant", content: textData });
 
-            // Detección mágica de código HTML (POC Zero Setup)
-            const htmlMatch = textData.match(/```html\s*([\s\S]*?)```/);
-            if (htmlMatch && htmlMatch[1]) {
-                const htmlContent = htmlMatch[1];
-                const blob = new Blob([htmlContent], { type: 'text/html' });
-                const blobUrl = URL.createObjectURL(blob);
-
-                logToConsole(`> 🌐 ¡Aplicación Web Detectada en la respuesta!`, 'success');
-
-                // Inyectar enlace clickeable directamente en el DOM de la consola
-                const linkLine = document.createElement('div');
-                linkLine.className = 'console-line';
-                linkLine.style.margin = '10px 0';
-                linkLine.innerHTML = `👉 <a href="${blobUrl}" target="_blank" style="color: #10b981; font-weight: bold; text-decoration: underline; font-size: 1.1em; background: rgba(16, 185, 129, 0.1); padding: 5px 10px; border-radius: 4px; display: inline-block;">ABRIR APLICACIÓN GENERADA (index.html)</a> 👈`;
-                consoleOutput.appendChild(linkLine);
-
-                logToConsole(`---------------------------------------------------`, 'normal');
-            }
-
             // Enriquecer y renderizar Markdown en Terminal
             const wrapper = document.createElement('div');
             wrapper.className = 'console-line markdown-preview';
@@ -1286,6 +1267,34 @@ btnRunPrompt.addEventListener('click', () => {
                 wrapper.innerText = textData;
             }
             consoleOutput.appendChild(wrapper);
+
+            // Detección mágica de código HTML (POC Zero Setup)
+            let htmlContent = null;
+            const htmlMatch = textData.match(/```html\s*([\s\S]*?)```/i);
+            
+            if (htmlMatch && htmlMatch[1]) {
+                htmlContent = htmlMatch[1];
+            } else {
+                // Fallback: Detectar <html> directo sin las comillas de markdown
+                const fallbackMatch = textData.match(/(<!DOCTYPE html>[\s\S]*?<\/html>|<html[\s\S]*?<\/html>)/i);
+                if (fallbackMatch && fallbackMatch[1]) {
+                    htmlContent = fallbackMatch[1];
+                }
+            }
+
+            if (htmlContent) {
+                const blob = new Blob([htmlContent], { type: 'text/html' });
+                const blobUrl = URL.createObjectURL(blob);
+
+                logToConsole(`> 🌐 ¡Aplicación Web Detectada en la respuesta!`, 'success');
+
+                // Inyectar enlace clickeable directamente en el DOM de la consola debajo de la respuesta
+                const linkLine = document.createElement('div');
+                linkLine.className = 'console-line';
+                linkLine.style.margin = '15px 0';
+                linkLine.innerHTML = `👉 <a href="${blobUrl}" target="_blank" style="color: #10b981; font-weight: bold; text-decoration: underline; font-size: 1.1em; background: rgba(16, 185, 129, 0.1); padding: 5px 10px; border-radius: 4px; display: inline-block;">ABRIR APLICACIÓN GENERADA (index.html)</a> 👈`;
+                consoleOutput.appendChild(linkLine);
+            }
 
             setTimeout(() => {
                 consoleOutput.parentElement.scrollTop = consoleOutput.parentElement.scrollHeight;

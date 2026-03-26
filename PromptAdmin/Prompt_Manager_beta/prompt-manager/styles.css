@@ -416,6 +416,18 @@ h4 {
     display: block;
     padding: 10px;
     overflow-x: auto;
+    white-space: pre;
+    font-size: 0.85rem;
+}
+
+.markdown-preview {
+    white-space: normal;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    word-break: break-word;
+}
+.markdown-preview p {
+    white-space: pre-wrap; /* Mantiene saltos de línea de la IA pero forzando el contenedor */
 }
 
 /* Modal */
@@ -522,6 +534,7 @@ h4 {
     gap: 20px;
     flex-grow: 1;
     min-height: 400px;
+    min-width: 0;
 }
 .exec-config {
     flex: 1;
@@ -541,6 +554,7 @@ h4 {
     display: flex;
     flex-direction: column;
     flex: 2.5;
+    min-width: 0;
     border: 1px solid var(--border);
 }
 
@@ -559,7 +573,9 @@ h4 {
     font-size: 0.9rem;
     flex-grow: 1;
     overflow-y: auto;
+    overflow-x: hidden;
     padding-right: 5px;
+    min-width: 0;
 }
 
 .console-line {
