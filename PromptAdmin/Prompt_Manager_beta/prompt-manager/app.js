@@ -1277,7 +1277,7 @@ btnRunPrompt.addEventListener('click', () => {
             const wrapper = document.createElement('div');
             wrapper.className = 'console-line markdown-preview';
             wrapper.style.margin = '10px 0';
-            wrapper.style.color = '#e2e8f0';
+            wrapper.style.color = '#0f172a';
             
             // Render default si marked no existe, sino parceo seguro
             if (typeof marked !== 'undefined') {
