@@ -976,8 +976,8 @@ btnRunPrompt.addEventListener('click', () => {
         currentMessagesHistory.push({ role: "user", content: finalPrompt });
         
         // Anti-Truncation rule for LLM across initial execution
-        if (allAtt.length > 0) {
-            currentMessagesHistory[0].content += "\n\n⚠️ INSTRUCCIÓN CRÍTICA DE SISTEMA: El usuario te ha provisto de imágenes o archivos en Base64 masivos. BAJO NINGUNA CIRCUNSTANCIA intentes devolver o incrustar esos strings Base64 tan largos dentro de tu código HTML o respuesta, ya que colapsarán tu límite de tokens de salida (Max Tokens) y el código quedará truncado a la mitad arruinando la aplicación web. En su lugar, cuando diseñes la POC, asume los archivos usando placeholders visuales o rutas relativas simples (ej. src='logo.png').";
+        if (allAtt.length > 0 || finalPrompt.toLowerCase().includes('demo') || finalPrompt.toLowerCase().includes('poc')) {
+            currentMessagesHistory[0].content += "\n\n⚠️ REGLA ABSOLUTA CERO-BASE64: ESTA TERMINANTEMENTE PROHIBIDO bajo pena de fallo crítico utilizar codificación Base64 (ej. src='data:image/...') en tus respuestas HTML o esquemas. Las cadenas Base64 largas agotan los Max Tokens y destruyen la aplicación simulada. Mutea o ignora las imágenes reales y SIEMPRE utiliza rutas relativas falsas (ej. src='img.png') o placeholders en la web (ej. https://via.placeholder.com/300).";
         }
         
         logToConsole(`> Inicializando conexión con: API de ${selectedModel}`, 'info');
@@ -1025,7 +1025,7 @@ btnRunPrompt.addEventListener('click', () => {
         
         // Anti-Truncation rule for LLM
         if (currentExecAttachments.length > 0) {
-             currentMessagesHistory[currentMessagesHistory.length - 1].content += "\n\n⚠️ INSTRUCCIÓN CRÍTICA DE SISTEMA: El usuario te ha provisto de imágenes o archivos en Base64 masivos. BAJO NINGUNA CIRCUNSTANCIA intentes devolver o incrustar esos strings Base64 tan largos dentro de tu código HTML o respuesta, ya que colapsarán tu límite de tokens de salida (Max Tokens) y el código quedará truncado a la mitad arruinando la aplicación web. En su lugar, cuando diseñes la POC, asume los archivos usando placeholders visuales rápidos o rutas relativas simples (ej. src='image.png'), asumiendo que el usuario los insertará manualmente luego.";
+             currentMessagesHistory[currentMessagesHistory.length - 1].content += "\n\n⚠️ REGLA ABSOLUTA CERO-BASE64: ESTA TERMINANTEMENTE PROHIBIDO bajo pena de fallo crítico utilizar codificación Base64 (ej. src='data:image/...') en tus respuestas HTML o esquemas. Las cadenas Base64 largas agotan los Max Tokens y destruyen la aplicación simulada. Mutea o ignora las imágenes reales y SIEMPRE utiliza rutas relativas falsas (ej. src='img.png') o placeholders en la web (ej. https://via.placeholder.com/300).";
         }
     }
 
@@ -1274,11 +1274,18 @@ btnRunPrompt.addEventListener('click', () => {
             wrapper.style.margin = '10px 0';
             wrapper.style.color = '#0f172a';
             
+            // Fix: Envenenamiento de DOM si la IA emite HTML crudo sin englobar en pre ticks (Markdown)
+            let safeTextData = textData;
+            const rawIndex = safeTextData.toLowerCase().indexOf('<!doctype html>');
+            if (rawIndex !== -1 && !safeTextData.includes('```html')) {
+                safeTextData = safeTextData.substring(0, rawIndex) + "\n```html\n" + safeTextData.substring(rawIndex) + "\n```\n";
+            }
+            
             // Render default si marked no existe, sino parceo seguro
             if (typeof marked !== 'undefined') {
-                wrapper.innerHTML = marked.parse(textData);
+                wrapper.innerHTML = marked.parse(safeTextData);
             } else {
-                wrapper.innerText = textData;
+                wrapper.innerText = safeTextData;
             }
             consoleOutput.appendChild(wrapper);
 
