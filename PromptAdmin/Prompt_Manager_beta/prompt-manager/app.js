@@ -974,6 +974,12 @@ btnRunPrompt.addEventListener('click', () => {
         });
 
         currentMessagesHistory.push({ role: "user", content: finalPrompt });
+        
+        // Anti-Truncation rule for LLM across initial execution
+        if (allAtt.length > 0) {
+            currentMessagesHistory[0].content += "\n\n⚠️ INSTRUCCIÓN CRÍTICA DE SISTEMA: El usuario te ha provisto de imágenes o archivos en Base64 masivos. BAJO NINGUNA CIRCUNSTANCIA intentes devolver o incrustar esos strings Base64 tan largos dentro de tu código HTML o respuesta, ya que colapsarán tu límite de tokens de salida (Max Tokens) y el código quedará truncado a la mitad arruinando la aplicación web. En su lugar, cuando diseñes la POC, asume los archivos usando placeholders visuales o rutas relativas simples (ej. src='logo.png').";
+        }
+        
         logToConsole(`> Inicializando conexión con: API de ${selectedModel}`, 'info');
         execModel.disabled = true; // Bloqueamos el selector de IA para mantener el contexto con la misma arquitectura
     } else {
@@ -1016,6 +1022,11 @@ btnRunPrompt.addEventListener('click', () => {
         
         currentMessagesHistory.push({ role: "user", content: userInput });
         logToConsole(`> 💬 Enviando iteración: "${execInput.value.substring(0, 50)}..."`, 'info');
+        
+        // Anti-Truncation rule for LLM
+        if (currentExecAttachments.length > 0) {
+             currentMessagesHistory[currentMessagesHistory.length - 1].content += "\n\n⚠️ INSTRUCCIÓN CRÍTICA DE SISTEMA: El usuario te ha provisto de imágenes o archivos en Base64 masivos. BAJO NINGUNA CIRCUNSTANCIA intentes devolver o incrustar esos strings Base64 tan largos dentro de tu código HTML o respuesta, ya que colapsarán tu límite de tokens de salida (Max Tokens) y el código quedará truncado a la mitad arruinando la aplicación web. En su lugar, cuando diseñes la POC, asume los archivos usando placeholders visuales rápidos o rutas relativas simples (ej. src='image.png'), asumiendo que el usuario los insertará manualmente luego.";
+        }
     }
 
     execInput.value = ''; // Limpiamos la caja de texto para la próxima iteración
@@ -1035,7 +1046,10 @@ btnRunPrompt.addEventListener('click', () => {
                 contents: messagesHistory.map(m => ({
                     role: m.role === "assistant" ? "model" : "user",
                     parts: [{ text: m.content }]
-                }))
+                })),
+                generationConfig: {
+                    maxOutputTokens: 8192
+                }
             };
             let initParams = { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) };
 
