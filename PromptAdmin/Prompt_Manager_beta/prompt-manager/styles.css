@@ -525,6 +525,8 @@ h4 {
 }
 .exec-config {
     flex: 1;
+    min-width: 300px;
+    max-width: 450px;
     display: flex;
     flex-direction: column;
 }
@@ -538,7 +540,7 @@ h4 {
     min-height: 150px;
     display: flex;
     flex-direction: column;
-    flex: 1.5;
+    flex: 2.5;
     border: 1px solid var(--border);
 }
 
