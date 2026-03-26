@@ -1268,32 +1268,50 @@ btnRunPrompt.addEventListener('click', () => {
             }
             consoleOutput.appendChild(wrapper);
 
-            // Detección mágica de código HTML (POC Zero Setup)
+            // Detección mágica profunda de código Web (POC Zero Setup)
             let htmlContent = null;
-            const htmlMatch = textData.match(/```html\s*([\s\S]*?)```/i);
+            const codeBlocks = [...textData.matchAll(/```(?:[a-z0-9]*)?\s*\n([\s\S]*?)(?:```|$)/gi)];
             
-            if (htmlMatch && htmlMatch[1]) {
-                htmlContent = htmlMatch[1];
+            if (codeBlocks.length > 0) {
+                // Buscamos si hay uno explícito
+                const htmlBlock = codeBlocks.find(b => b[0].toLowerCase().startsWith('```html'));
+                if (htmlBlock) {
+                    htmlContent = htmlBlock[1];
+                } else {
+                    // Si dividió el Zero Setup en multiples bloques, o no lo tagueó, unimos todo
+                    htmlContent = codeBlocks.map(b => b[1]).join('\n\n');
+                }
             } else {
-                // Fallback: Detectar <html> directo sin las comillas de markdown
-                const fallbackMatch = textData.match(/(<!DOCTYPE html>[\s\S]*?<\/html>|<html[\s\S]*?<\/html>)/i);
-                if (fallbackMatch && fallbackMatch[1]) {
-                    htmlContent = fallbackMatch[1];
+                // Fallback extremo: detectar <html> raw si olvidó las triple comillas
+                const rawHTML = textData.match(/(<!DOCTYPE html[\s\S]*|<html[\s\S]*)/i);
+                if (rawHTML) {
+                    htmlContent = rawHTML[1];
                 }
             }
 
-            if (htmlContent) {
+            if (htmlContent && htmlContent.trim().length > 20) {
+                // Intentar asegurar que es renderizable remotamente 
+                if(!htmlContent.toLowerCase().includes('<html')) {
+                    htmlContent = `<!DOCTYPE html>\n<html>\n<head><meta charset="UTF-8"><style>${htmlContent}</style></head><body><script>${htmlContent}</script></body></html>`;
+                }
+
                 const blob = new Blob([htmlContent], { type: 'text/html' });
                 const blobUrl = URL.createObjectURL(blob);
 
-                logToConsole(`> 🌐 ¡Aplicación Web Detectada en la respuesta!`, 'success');
+                logToConsole(`> 🌐 ¡Código Web Detectado en la respuesta!`, 'success');
 
-                // Inyectar enlace clickeable directamente en el DOM de la consola debajo de la respuesta
                 const linkLine = document.createElement('div');
                 linkLine.className = 'console-line';
-                linkLine.style.margin = '15px 0';
-                linkLine.innerHTML = `👉 <a href="${blobUrl}" target="_blank" style="color: #10b981; font-weight: bold; text-decoration: underline; font-size: 1.1em; background: rgba(16, 185, 129, 0.1); padding: 5px 10px; border-radius: 4px; display: inline-block;">ABRIR APLICACIÓN GENERADA (index.html)</a> 👈`;
-                consoleOutput.appendChild(linkLine);
+                linkLine.style.margin = '15px 0 25px 0';
+                linkLine.innerHTML = `👉 <a href="${blobUrl}" target="_blank" style="color: #10b981; font-weight: bold; text-decoration: underline; font-size: 1.1em; background: rgba(16, 185, 129, 0.1); padding: 5px 10px; border-radius: 4px; display: inline-block;">ABRIR APLICACIÓN GENERADA (App Web)</a> 👈`;
+                
+                // Inyectamos el botón justo después de la línea "¡Excelente! ..." (primer párrafo)
+                const firstP = wrapper.querySelector('p');
+                if (firstP) {
+                    firstP.insertAdjacentElement('afterend', linkLine);
+                } else {
+                    wrapper.insertBefore(linkLine, wrapper.firstChild);
+                }
             }
 
             setTimeout(() => {
