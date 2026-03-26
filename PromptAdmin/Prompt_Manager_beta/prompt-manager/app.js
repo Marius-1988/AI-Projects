@@ -150,6 +150,19 @@ const consoleOutput = document.getElementById('console-output');
 const errorInput = document.getElementById('error-input');
 const errorModel = document.getElementById('error-model');
 
+// Attachments
+let currentCreateAttachments = [];
+let currentExecAttachments = [];
+
+const btnCreateAttach = document.getElementById('btn-create-attach');
+const createFileInput = document.getElementById('create-file-input');
+const createAttachmentsList = document.getElementById('create-attachments-list');
+
+const btnExecAttach = document.getElementById('btn-exec-attach');
+const execFileInput = document.getElementById('exec-file-input');
+const execAttachmentsList = document.getElementById('exec-attachments-list');
+const execRulesAttachmentsList = document.getElementById('exec-rules-attachments-list');
+
 const btnEditRules = document.getElementById('btn-edit-rules');
 
 // Modal Keys
@@ -476,6 +489,7 @@ btnSaveUseCase.addEventListener('click', async (e) => {
                 useCases[ucIndex].sectionId = selectedSectionId; // Update section
                 useCases[ucIndex].subsection = selectedSub;
                 useCases[ucIndex].status = createStatus.value;
+                useCases[ucIndex].attachments = [...currentCreateAttachments];
             }
             await saveCases();
             showToast('Caso de Uso actualizado exitosamente');
@@ -489,7 +503,8 @@ btnSaveUseCase.addEventListener('click', async (e) => {
                 sectionId: selectedSectionId,
                 subsection: selectedSub,
                 status: createStatus.value,
-                executeCount: 0 // New field for popularity
+                executeCount: 0,
+                attachments: [...currentCreateAttachments]
             };
             useCases.push(newCase);
             await saveCases();
@@ -744,6 +759,9 @@ window.editUseCase = (id, event) => {
         createSubsectionDropdown.value = uc.subsection;
     }
 
+    currentCreateAttachments = uc.attachments ? [...uc.attachments] : [];
+    renderAttachments(currentCreateAttachments, createAttachmentsList);
+
     openModal('modal-create');
 };
 
@@ -823,9 +841,75 @@ window.openExecuteModal = (id) => {
     btnRunPrompt.disabled = false;
     btnRunPrompt.textContent = '⚡ Ejecutar';
 
+    currentExecAttachments = [];
+    renderAttachments(currentExecAttachments, execAttachmentsList);
+    
+    // Mostramos los adjuntos guardados de las Reglas (modo lectura)
+    execRulesAttachmentsList.innerHTML = '';
+    if (uc.attachments && uc.attachments.length > 0) {
+        uc.attachments.forEach(att => {
+            const item = document.createElement('div');
+            item.className = 'attachment-item';
+            item.innerHTML = `
+                <div class="attachment-name">📎 ${att.name}</div>
+                <a href="${att.data}" download="${att.name}" class="attachment-download" title="Descargar">⬇️ Descargar</a>
+            `;
+            execRulesAttachmentsList.appendChild(item);
+        });
+    }
+
     resetConsole();
     openModal('modal-execute');
 }
+
+// ---- LOGICA DE ADJUNTOS ----
+function handleFileUpload(event, attachmentsArray, listElement) {
+    const files = event.target.files;
+    Array.from(files).forEach(file => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            attachmentsArray.push({
+                name: file.name,
+                type: file.type,
+                data: e.target.result
+            });
+            renderAttachments(attachmentsArray, listElement);
+        };
+        reader.readAsDataURL(file);
+    });
+    event.target.value = '';
+}
+
+function renderAttachments(attachmentsArray, listElement) {
+    listElement.innerHTML = '';
+    attachmentsArray.forEach((att, index) => {
+        const item = document.createElement('div');
+        item.className = 'attachment-item';
+        item.innerHTML = `
+            <div class="attachment-name" title="${att.name}">📎 ${att.name}</div>
+            <div style="display:flex; gap:10px;">
+                <span class="attachment-remove" onclick="removeAttachment(${index}, '${listElement.id}')" title="Eliminar">❌</span>
+            </div>
+        `;
+        listElement.appendChild(item);
+    });
+}
+
+window.removeAttachment = (index, listId) => {
+    if (listId === 'create-attachments-list') {
+        currentCreateAttachments.splice(index, 1);
+        renderAttachments(currentCreateAttachments, createAttachmentsList);
+    } else if (listId === 'exec-attachments-list') {
+        currentExecAttachments.splice(index, 1);
+        renderAttachments(currentExecAttachments, execAttachmentsList);
+    }
+};
+
+if (btnCreateAttach) btnCreateAttach.addEventListener('click', () => createFileInput.click());
+if (createFileInput) createFileInput.addEventListener('change', (e) => handleFileUpload(e, currentCreateAttachments, createAttachmentsList));
+
+if (btnExecAttach) btnExecAttach.addEventListener('click', () => execFileInput.click());
+if (execFileInput) execFileInput.addEventListener('change', (e) => handleFileUpload(e, currentExecAttachments, execAttachmentsList));
 
 function resetConsole() {
     consoleOutput.innerHTML = '<div class="console-line text-muted">A la espera de ejecución...</div>';
@@ -879,7 +963,15 @@ btnRunPrompt.addEventListener('click', () => {
         resetConsole();
         const rules = currentExecutingCase.rules;
         const userInput = execInput.value;
-        const finalPrompt = `[REGLAS GENERALES]\n${rules}\n\n[INPUT]\n${userInput}`;
+        let finalPrompt = `[REGLAS GENERALES]\n${rules}\n\n[INPUT]\n${userInput}`;
+
+        let allAtt = [...(currentExecutingCase.attachments || []), ...currentExecAttachments];
+        allAtt.forEach(att => {
+            let text = "";
+            try { text = decodeURIComponent(escape(atob(att.data.split(',')[1]))); } 
+            catch(e) { text = `[Archivo Binario Base64: ${att.name}]`; }
+            finalPrompt += `\n\n--- Archivo Adjunto: ${att.name} ---\n${text}\n---------------------------`;
+        });
 
         currentMessagesHistory.push({ role: "user", content: finalPrompt });
         logToConsole(`> Inicializando conexión con: API de ${selectedModel}`, 'info');
@@ -892,21 +984,43 @@ btnRunPrompt.addEventListener('click', () => {
         if (looseElements.length > 0) {
             const detailsWrapper = document.createElement('details');
             detailsWrapper.className = 'console-iteration-block';
+            
+            const summary = document.createElement('summary');
             const turnNumber = Math.ceil(currentMessagesHistory.length / 2);
-            detailsWrapper.innerHTML = `<summary>📜 Ver Ejecución #${turnNumber} anterior...</summary>`;
+            summary.textContent = `📜 Ver Ejecución #${turnNumber} anterior...`;
+            summary.style.cursor = 'pointer';
+            summary.style.color = '#3b82f6';
+            summary.style.marginBottom = '10px';
+            
+            detailsWrapper.appendChild(summary);
 
+            const contentDiv = document.createElement('div');
+            contentDiv.style.borderLeft = '2px solid #334155';
+            contentDiv.style.paddingLeft = '10px';
+            
             // Movemos los elementos sueltos dentro del details
-            looseElements.forEach(el => detailsWrapper.appendChild(el));
+            looseElements.forEach(el => contentDiv.appendChild(el));
+            detailsWrapper.appendChild(contentDiv);
+            
             consoleOutput.appendChild(detailsWrapper);
         }
 
         // Ejecución iterativa / chat
-        const userInput = execInput.value;
+        let userInput = execInput.value;
+        currentExecAttachments.forEach(att => {
+            let text = "";
+            try { text = decodeURIComponent(escape(atob(att.data.split(',')[1]))); } 
+            catch(e) { text = `[Archivo Binario Base64: ${att.name}]`; }
+            userInput += `\n\n--- Archivo Adjunto (Iteración): ${att.name} ---\n${text}\n---------------------------`;
+        });
+        
         currentMessagesHistory.push({ role: "user", content: userInput });
-        logToConsole(`> 💬 Enviando iteración: "${userInput.substring(0, 50)}..."`, 'info');
+        logToConsole(`> 💬 Enviando iteración: "${execInput.value.substring(0, 50)}..."`, 'info');
     }
 
     execInput.value = ''; // Limpiamos la caja de texto para la próxima iteración
+    currentExecAttachments = [];
+    renderAttachments(currentExecAttachments, execAttachmentsList);
 
     // Función que rutea la llamada real a cada API, ahora recibe historial completo
     async function executeAIApiCall(model, apiKey, messagesHistory) {
@@ -1159,9 +1273,23 @@ btnRunPrompt.addEventListener('click', () => {
                 logToConsole(`---------------------------------------------------`, 'normal');
             }
 
-            // Imprimir la respuesta en líneas para mejorar legibilidad
-            const lines = textData.split(/\r?\n/);
-            lines.forEach(l => logToConsole(l, 'text-muted'));
+            // Enriquecer y renderizar Markdown en Terminal
+            const wrapper = document.createElement('div');
+            wrapper.className = 'console-line markdown-preview';
+            wrapper.style.margin = '10px 0';
+            wrapper.style.color = '#e2e8f0';
+            
+            // Render default si marked no existe, sino parceo seguro
+            if (typeof marked !== 'undefined') {
+                wrapper.innerHTML = marked.parse(textData);
+            } else {
+                wrapper.innerText = textData;
+            }
+            consoleOutput.appendChild(wrapper);
+
+            setTimeout(() => {
+                consoleOutput.parentElement.scrollTop = consoleOutput.parentElement.scrollHeight;
+            }, 50);
 
             logToConsole(`---------------------------------------------------`, 'normal');
         })

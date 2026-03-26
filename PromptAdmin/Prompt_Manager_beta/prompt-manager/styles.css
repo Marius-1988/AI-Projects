@@ -518,8 +518,15 @@ h4 {
 /* Layout de Ejecución */
 .layout-execute {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     gap: 20px;
+    flex-grow: 1;
+    min-height: 400px;
+}
+.exec-config {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
 }
 
 /* Consola/Terminal Simulada */
@@ -531,6 +538,7 @@ h4 {
     min-height: 150px;
     display: flex;
     flex-direction: column;
+    flex: 1;
 }
 
 .exec-console h4 {
@@ -559,6 +567,56 @@ h4 {
 
 .console-line.loading::after {
     content: " ⏳";
+}
+
+.terminal pre {
+    background-color: #0f172a;
+    border-radius: 6px;
+    padding: 10px;
+    max-height: 250px;
+    overflow-y: auto;
+    border: 1px solid #334155;
+    position: relative;
+    margin: 10px 0;
+}
+
+.terminal pre code {
+    font-family: monospace;
+    font-size: 0.85rem;
+}
+
+/* Archivos Adjuntos */
+.attachment-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: var(--bg-main);
+    padding: 6px 10px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    border: 1px solid var(--border);
+}
+.attachment-name {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    color: var(--text-main);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.attachment-remove {
+    cursor: pointer;
+    color: #ef4444;
+    font-weight: bold;
+    flex-shrink: 0;
+}
+.attachment-download {
+    cursor: pointer;
+    color: var(--primary);
+    text-decoration: none;
+    font-weight: bold;
+    flex-shrink: 0;
 }
 
 /* Toast Notificación */

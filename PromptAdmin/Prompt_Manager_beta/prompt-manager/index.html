@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Prompt Manager</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css?v=2.3">
+    <link rel="stylesheet" href="styles.css">
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 
@@ -157,6 +157,11 @@
                         <textarea id="create-rules" rows="12"
                             placeholder="Ej. Eres un experto en marketing digital. Tu objetivo es..."
                             required></textarea>
+                        <div style="margin-top: 8px;">
+                            <button type="button" class="btn btn-outline" id="btn-create-attach" style="padding: 5px 10px; font-size:0.85rem;" title="Adjuntar Archivo">📎 Adjuntar</button>
+                            <input type="file" id="create-file-input" multiple style="display: none;">
+                            <div id="create-attachments-list" style="margin-top: 10px; display: flex; flex-direction: column; gap: 5px;"></div>
+                        </div>
                     </div>
                     <div class="form-group">
                         <label for="create-input">Input (opcional)</label>
@@ -214,9 +219,9 @@
                 <h3 id="exec-title">Ejecutar Caso de Uso</h3>
                 <button class="btn-close" onclick="closeModal('modal-execute')">×</button>
             </div>
-            <div class="modal-body">
+            <div class="modal-body" style="display: flex; flex-direction: column; flex-grow: 1; padding-bottom: 0;">
                 <div class="layout-execute">
-                    <!-- Configuración -->
+                    <!-- Configuración (Izquierda) -->
                     <div class="exec-config">
                         <div class="form-group">
                             <label
@@ -227,6 +232,9 @@
                                     title="Editar Reglas">✏️</button>
                             </label>
                             <textarea id="exec-rules" rows="5" readonly class="readonly-input"></textarea>
+                            <div id="exec-rules-attachments-list" style="margin-top: 10px; display: flex; flex-direction: column; gap: 5px;">
+                                <!-- Archivos adjuntos desde la creación -->
+                            </div>
                         </div>
                         <div class="form-group">
                             <label for="exec-input">Input <span class="required">*</span></label>
@@ -234,6 +242,11 @@
                                 placeholder="Escribe tu consulta o variables a enviar al modelo..." required></textarea>
                             <span class="error-text hidden" id="error-input">El input es obligatorio para
                                 ejecutar.</span>
+                            <div style="margin-top: 8px;">
+                                <button type="button" class="btn btn-outline" id="btn-exec-attach" style="padding: 5px 10px; font-size:0.85rem;" title="Adjuntar Archivo al Input">📎 Adjuntar al Input</button>
+                                <input type="file" id="exec-file-input" multiple style="display: none;">
+                                <div id="exec-attachments-list" style="margin-top: 10px; display: flex; flex-direction: column; gap: 5px;"></div>
+                            </div>
                         </div>
                         <div class="form-group">
                             <label for="exec-model">Modelo IA <span class="required">*</span></label>
@@ -246,16 +259,17 @@
                             <span class="error-text hidden" id="error-model">Debe seleccionar un modelo de IA.</span>
                         </div>
 
-                        <!-- Consola / Respuesta -->
-                        <div class="exec-console">
-                            <h4>Terminal de Ejecución</h4>
-                            <div id="console-output" class="terminal">
-                                <div class="console-line text-muted">A la espera de ejecución...</div>
-                            </div>
+                    </div>
+                    
+                    <!-- Consola / Respuesta (Derecha) -->
+                    <div class="exec-console">
+                        <h4>Terminal de Ejecución</h4>
+                        <div id="console-output" class="terminal">
+                            <div class="console-line text-muted">A la espera de ejecución...</div>
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer">
+                <div class="modal-footer" style="padding-bottom: 20px;">
                     <button class="btn btn-outline" onclick="closeModal('modal-execute')">Cancelar</button>
                     <button class="btn btn-success" id="btn-run-prompt">⚡ Ejecutar</button>
                 </div>
