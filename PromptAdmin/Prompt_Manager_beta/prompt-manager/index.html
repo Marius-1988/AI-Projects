@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Prompt Manager</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles.css?v=2.5">
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 
@@ -129,6 +129,10 @@
                         <input type="text" id="create-name" placeholder="Ej. Generador de Copywriting" required>
                     </div>
                     <div class="form-group">
+                        <label for="create-desc">Descripción (breve resumen de lo que hace el prompt)</label>
+                        <textarea id="create-desc" rows="2" placeholder="Opcional..."></textarea>
+                    </div>
+                    <div class="form-group">
                         <label for="create-section">Sección <span class="required">*</span></label>
                         <select id="create-section" required>
                             <option value="" disabled selected>Selecciona una sección...</option>
@@ -216,7 +220,10 @@
     <div id="modal-execute" class="modal hidden">
         <div class="modal-content modal-lg">
             <div class="modal-header">
-                <h3 id="exec-title">Ejecutar Caso de Uso</h3>
+                <div style="flex-grow: 1;">
+                    <h3 id="exec-title" style="margin-bottom: 3px;">Ejecutar Caso de Uso</h3>
+                    <p id="exec-desc" class="text-muted" style="font-size: 0.85rem; margin: 0;"></p>
+                </div>
                 <button class="btn-close" onclick="closeModal('modal-execute')">×</button>
             </div>
             <div class="modal-body" style="display: flex; flex-direction: column; flex-grow: 1; padding-bottom: 0;">
@@ -269,7 +276,11 @@
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer" style="padding-bottom: 20px;">
+                <div class="modal-footer" style="padding-bottom: 20px; align-items: stretch;">
+                    <div style="display: flex; gap: 10px; flex-grow: 1;">
+                        <button class="btn btn-outline" id="btn-download-history" type="button" style="font-size:0.80rem;" title="Descargar toda la iteración como Markdown">⬇️ Historial (.md)</button>
+                        <button class="btn btn-outline" id="btn-download-last" type="button" style="font-size:0.80rem;" title="Descargar última devolución como Markdown">⬇️ Última Res (.md)</button>
+                    </div>
                     <button class="btn btn-outline" onclick="closeModal('modal-execute')">Cancelar</button>
                     <button class="btn btn-success" id="btn-run-prompt">⚡ Ejecutar</button>
                 </div>
@@ -417,7 +428,7 @@
             <div id="debug-logs" class="debug-logs"></div>
         </div>
 
-        <script type="module" src="app.js?v=2.3"></script>
+        <script type="module" src="app.js?v=2.5"></script>
 </body>
 
 </html>

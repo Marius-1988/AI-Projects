@@ -130,6 +130,7 @@ const createName = document.getElementById('create-name');
 const createRules = document.getElementById('create-rules');
 const createInput = document.getElementById('create-input');
 const createStatus = document.getElementById('create-status');
+const createDesc = document.getElementById('create-desc');
 
 // Modal Asignar Caso
 const modalAssign = document.getElementById('modal-assign');
@@ -141,6 +142,7 @@ let assigningUseCaseId = null;
 // Modal Ejecución Contexto
 const modalExecute = document.getElementById('modal-execute');
 const execTitle = document.getElementById('exec-title');
+const execDesc = document.getElementById('exec-desc');
 const execRules = document.getElementById('exec-rules');
 const execInput = document.getElementById('exec-input');
 const execModel = document.getElementById('exec-model');
@@ -164,6 +166,8 @@ const execAttachmentsList = document.getElementById('exec-attachments-list');
 const execRulesAttachmentsList = document.getElementById('exec-rules-attachments-list');
 
 const btnEditRules = document.getElementById('btn-edit-rules');
+const btnDownloadHistory = document.getElementById('btn-download-history');
+const btnDownloadLast = document.getElementById('btn-download-last');
 
 // Modal Keys
 const modalSettings = document.getElementById('modal-settings');
@@ -435,6 +439,7 @@ async function saveCases() {
 
 btnCreatePrompt.addEventListener('click', () => {
     formCreate.reset();
+    createDesc.value = '';
     editingUseCaseId = null;
     createStatus.value = 'En construcción';
     if (modalCreateTitle) modalCreateTitle.textContent = 'Nuevo Caso de Uso';
@@ -484,6 +489,7 @@ btnSaveUseCase.addEventListener('click', async (e) => {
             const ucIndex = useCases.findIndex(c => c.id === editingUseCaseId);
             if (ucIndex !== -1) {
                 useCases[ucIndex].name = createName.value.trim();
+                useCases[ucIndex].desc = createDesc.value.trim();
                 useCases[ucIndex].rules = createRules.value.trim();
                 useCases[ucIndex].input = createInput.value.trim();
                 useCases[ucIndex].sectionId = selectedSectionId; // Update section
@@ -498,6 +504,7 @@ btnSaveUseCase.addEventListener('click', async (e) => {
             const newCase = {
                 id: Date.now().toString(),
                 name: createName.value.trim(),
+                desc: createDesc.value.trim(),
                 rules: createRules.value.trim(),
                 input: createInput.value.trim(),
                 sectionId: selectedSectionId,
@@ -664,7 +671,7 @@ function renderUseCases() {
                 `;
 
                 card.innerHTML = `
-                    <div onclick="openExecuteModal('${uc.id}')" style="flex-grow: 1; cursor: pointer;">
+                    <div onclick="openExecuteModal('${uc.id}')" style="flex-grow: 1; cursor: pointer;" title="${(uc.desc || 'Haz clic para ejecutar').replace(/"/g, '&quot;')}">
                         ${tagsHTML}
                         <h3 class="usecase-title">${uc.name}</h3>
                         <p class="usecase-desc">${uc.rules}</p>
@@ -726,7 +733,7 @@ function renderPopularCases() {
         `;
 
         card.innerHTML = `
-            <div onclick="openExecuteModal('${uc.id}')" style="flex-grow: 1; cursor: pointer;">
+            <div onclick="openExecuteModal('${uc.id}')" style="flex-grow: 1; cursor: pointer;" title="${(uc.desc || 'Haz clic para ejecutar').replace(/"/g, '&quot;')}">
                 ${tagsHTML}
                 <h3 class="usecase-title">${uc.name}</h3>
                 <p class="usecase-desc">${uc.rules}</p>
@@ -749,6 +756,7 @@ window.editUseCase = (id, event) => {
     if (modalCreateTitle) modalCreateTitle.textContent = 'Editar Caso de Uso';
 
     createName.value = uc.name;
+    createDesc.value = uc.desc || '';
     createRules.value = uc.rules;
     createInput.value = uc.input || '';
     createStatus.value = uc.status || 'En construcción';
@@ -1268,50 +1276,40 @@ btnRunPrompt.addEventListener('click', () => {
             const textData = response.data;
             currentMessagesHistory.push({ role: "assistant", content: textData });
 
-            // Enriquecer y renderizar Markdown en Terminal
-            const wrapper = document.createElement('div');
-            wrapper.className = 'console-line markdown-preview';
-            wrapper.style.margin = '10px 0';
-            wrapper.style.color = '#0f172a';
-            
-            // Fix: Envenenamiento de DOM si la IA emite HTML crudo sin englobar en pre ticks (Markdown)
-            let safeTextData = textData;
-            const rawIndex = safeTextData.toLowerCase().indexOf('<!doctype html>');
-            if (rawIndex !== -1 && !safeTextData.includes('```html')) {
-                safeTextData = safeTextData.substring(0, rawIndex) + "\n```html\n" + safeTextData.substring(rawIndex) + "\n```\n";
-            }
-            
-            // Render default si marked no existe, sino parceo seguro
-            if (typeof marked !== 'undefined') {
-                wrapper.innerHTML = marked.parse(safeTextData);
-            } else {
-                wrapper.innerText = safeTextData;
-            }
-            consoleOutput.appendChild(wrapper);
-
-            // Detección mágica profunda de código Web (POC Zero Setup)
+            // Extraemos código HTML sin alterar textData
             let htmlContent = null;
             const codeBlocks = [...textData.matchAll(/```(?:[a-z0-9]*)?\s*\n([\s\S]*?)(?:```|$)/gi)];
             
             if (codeBlocks.length > 0) {
-                // Buscamos si hay uno explícito
                 const htmlBlock = codeBlocks.find(b => b[0].toLowerCase().startsWith('```html'));
                 if (htmlBlock) {
                     htmlContent = htmlBlock[1];
                 } else {
-                    // Si dividió el Zero Setup en multiples bloques, o no lo tagueó, unimos todo
                     htmlContent = codeBlocks.map(b => b[1]).join('\n\n');
                 }
             } else {
-                // Fallback extremo: detectar <html> raw si olvidó las triple comillas
                 const rawHTML = textData.match(/(<!DOCTYPE html[\s\S]*|<html[\s\S]*)/i);
                 if (rawHTML) {
                     htmlContent = rawHTML[1];
                 }
             }
 
+            // Print Response (Simple Markdown)
+            const wrapper = document.createElement('div');
+            wrapper.className = 'console-line markdown-preview';
+            wrapper.style.margin = '10px 0';
+            wrapper.style.color = '#0f172a';
+            
+            if (typeof marked !== 'undefined') {
+                wrapper.innerHTML = marked.parse(textData);
+            } else {
+                wrapper.style.whiteSpace = 'pre-wrap';
+                wrapper.textContent = textData;
+            }
+            consoleOutput.appendChild(wrapper);
+
+            // Print Zero Setup Button cleanly at the bottom
             if (htmlContent && htmlContent.trim().length > 20) {
-                // Intentar asegurar que es renderizable remotamente 
                 if(!htmlContent.toLowerCase().includes('<html')) {
                     htmlContent = `<!DOCTYPE html>\n<html>\n<head><meta charset="UTF-8"><style>${htmlContent}</style></head><body><script>${htmlContent}</script></body></html>`;
                 }
@@ -1326,13 +1324,8 @@ btnRunPrompt.addEventListener('click', () => {
                 linkLine.style.margin = '15px 0 25px 0';
                 linkLine.innerHTML = `👉 <a href="${blobUrl}" target="_blank" style="color: #10b981; font-weight: bold; text-decoration: underline; font-size: 1.1em; background: rgba(16, 185, 129, 0.1); padding: 5px 10px; border-radius: 4px; display: inline-block;">ABRIR APLICACIÓN GENERADA (App Web)</a> 👈`;
                 
-                // Inyectamos el botón justo después de la línea "¡Excelente! ..." (primer párrafo)
-                const firstP = wrapper.querySelector('p');
-                if (firstP) {
-                    firstP.insertAdjacentElement('afterend', linkLine);
-                } else {
-                    wrapper.insertBefore(linkLine, wrapper.firstChild);
-                }
+                // Anclamos al inicio de la respuesta renderizada
+                wrapper.insertBefore(linkLine, wrapper.firstChild);
             }
 
             setTimeout(() => {
@@ -1353,6 +1346,65 @@ btnRunPrompt.addEventListener('click', () => {
             execInput.focus();
         });
 });
+
+if (btnDownloadHistory) {
+    btnDownloadHistory.addEventListener('click', () => {
+        if (!currentExecutingCase || currentMessagesHistory.length === 0) {
+            showToast('No hay historial de ejecución para este prompt.');
+            return;
+        }
+
+        let mdContent = `[INICIO DEL DOCUMENTO]\n\n# Historial de Ejecución\n\n`;
+        mdContent += `**Caso de Uso:** ${currentExecutingCase.name}\n`;
+        if (currentExecutingCase.desc) mdContent += `**Descripción:** ${currentExecutingCase.desc}\n`;
+        mdContent += `**Reglas Generales del prompt:**\n${currentExecutingCase.rules}\n\n`;
+        mdContent += `---\n\n`;
+
+        currentMessagesHistory.forEach((msg, idx) => {
+            if (msg.role === 'user') {
+                // The first user prompt actually contains the rules within the string behind the scenes, we should strip it or just print it as is since it's the raw request. 
+                // But since the user specifically requested "tal como si fuera una conversacion, todos los textos de "input" ingresados por el usuario..." 
+                // We will print the raw content as it was sent to the LLM (which includes rules + attachments in text form) 
+                // Wait, the prompt says "[inicio] Reglas, Input, Respuesta 1, Input ...", but our first user msg already has rules injected via JS. Let's just output the real raw user messages.
+                mdContent += `### Input (Iteración ${Math.ceil((idx+1)/2)})\n${msg.content}\n\n`;
+            } else {
+                mdContent += `### Respuesta ${Math.ceil(idx/2)}\n${msg.content}\n\n---\n\n`;
+            }
+        });
+        
+        mdContent += `[FIN DEL DOCUMENTO]\n`;
+        downloadFile(`${currentExecutingCase.name.replace(/\s+/g, '_')}_historial.md`, mdContent);
+    });
+}
+
+if (btnDownloadLast) {
+    btnDownloadLast.addEventListener('click', () => {
+        if (currentMessagesHistory.length === 0) {
+            showToast('Aún no has ejecutado este prompt.');
+            return;
+        }
+        
+        let lastResponse = [...currentMessagesHistory].reverse().find(m => m.role === 'assistant');
+        if (!lastResponse) {
+            showToast('La IA aún no ha respondido. Espera a que termine.');
+            return;
+        }
+
+        downloadFile(`${currentExecutingCase.name.replace(/\s+/g, '_')}_ultima_respuesta.md`, lastResponse.content);
+    });
+}
+
+function downloadFile(filename, text) {
+    const blob = new Blob([text], { type: 'text/markdown;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
 
 // ---- Utilidades Generales ----
 
