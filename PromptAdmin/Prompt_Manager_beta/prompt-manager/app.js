@@ -1314,6 +1314,23 @@ btnRunPrompt.addEventListener('click', () => {
 
             // Print Zero Setup Button cleanly at the bottom
             if (htmlContent && htmlContent.trim().length > 20 && (htmlContent.includes('<') && htmlContent.includes('>'))) {
+                
+                // RECORDATORIO: Corrección de caché para respuestas truncadas por límite de tokens (Max Tokens)
+                // Si la IA no terminó de generar el código y cortó abruptamente dentro del <style> o del <head>,
+                // la página quedaba en blanco. Esto cierra automáticamente las etiquetas críticas.
+                const countStyles = (htmlContent.match(/<style/gi) || []).length;
+                const countStylesEnd = (htmlContent.match(/<\/style>/gi) || []).length;
+                if (countStyles > countStylesEnd) htmlContent += '\n}\n</style>';
+
+                const countScripts = (htmlContent.match(/<script/gi) || []).length;
+                const countScriptsEnd = (htmlContent.match(/<\/script>/gi) || []).length;
+                if (countScripts > countScriptsEnd) htmlContent += '\n</script>';
+
+                // Si tiene etiqueta html pero nunca llegó a escupir la etiqueta body porque se truncó antes
+                if (htmlContent.toLowerCase().includes('<html') && !htmlContent.toLowerCase().includes('<body')) {
+                    htmlContent += '\n</head>\n<body>\n<div style="padding: 30px; font-family: sans-serif; text-align: center;">\n<h2 style="color: #ef4444;">⚠️ Ejecución Incompleta</h2>\n<p>El código de la aplicación se truncó antes de llegar a los elementos visuales de la pantalla, posiblemente por exceder el máximo límite de tokens.</p><p><b>Solución:</b> Vuelve a presionar Ejecutar pero esta vez dile a la IA: <i>"Por favor, continúa el código exactamente desde donde te quedaste: [copia y pega la última línea que se generó]"</i>.</p>\n</div>\n</body>\n</html>';
+                }
+
                 if(!htmlContent.toLowerCase().includes('<html')) {
                     htmlContent = `<!DOCTYPE html>\n<html>\n<head><meta charset="UTF-8"></head>\n<body>\n${htmlContent}\n</body>\n</html>`;
                 }
