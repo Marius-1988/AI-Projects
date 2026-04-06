@@ -839,6 +839,7 @@ window.openExecuteModal = (id) => {
     currentMessagesHistory = []; // Resetear historial
 
     execTitle.textContent = `Ejecutar: ${uc.name}`;
+    if (execDesc) execDesc.textContent = uc.desc || '';
     execRules.value = uc.rules;
     execInput.value = uc.input || '';
     execModel.value = ''; // Reset modelo
@@ -1285,7 +1286,10 @@ btnRunPrompt.addEventListener('click', () => {
                 if (htmlBlock) {
                     htmlContent = htmlBlock[1];
                 } else {
-                    htmlContent = codeBlocks.map(b => b[1]).join('\n\n');
+                    const joinedBlocks = codeBlocks.map(b => b[1]).join('\n\n');
+                    if (joinedBlocks.includes('<div') || joinedBlocks.includes('<html') || joinedBlocks.includes('<body') || joinedBlocks.includes('<style')) {
+                        htmlContent = joinedBlocks;
+                    }
                 }
             } else {
                 const rawHTML = textData.match(/(<!DOCTYPE html[\s\S]*|<html[\s\S]*)/i);
@@ -1309,9 +1313,9 @@ btnRunPrompt.addEventListener('click', () => {
             consoleOutput.appendChild(wrapper);
 
             // Print Zero Setup Button cleanly at the bottom
-            if (htmlContent && htmlContent.trim().length > 20) {
+            if (htmlContent && htmlContent.trim().length > 20 && (htmlContent.includes('<') && htmlContent.includes('>'))) {
                 if(!htmlContent.toLowerCase().includes('<html')) {
-                    htmlContent = `<!DOCTYPE html>\n<html>\n<head><meta charset="UTF-8"><style>${htmlContent}</style></head><body><script>${htmlContent}</script></body></html>`;
+                    htmlContent = `<!DOCTYPE html>\n<html>\n<head><meta charset="UTF-8"></head>\n<body>\n${htmlContent}\n</body>\n</html>`;
                 }
 
                 const blob = new Blob([htmlContent], { type: 'text/html' });
